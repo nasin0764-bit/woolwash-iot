@@ -27,7 +27,7 @@ that is not marked [HUMAN]**, finishes it, ticks it, and commits and pushes. The
 
 ## Task queue
 
-- [ ] 1. **Field-analysis tool** `tools/analyze_field.py`: read the filled
+- [x] 1. **Field-analysis tool** `tools/analyze_field.py`: read the filled
       `IEEE_IoT_Factory_Validation_Template.xlsx` plus the server exports. Compute held-out soft-sensor RMSE, MAE and
       R² for the four models (day-separated split), packet delivery %, median and p95 latency, kWh/kg and L/kg
       (mean ± SD, 95% CI), and fault-detection delays. Write LaTeX table snippets to `results/field/` for Section VII.
@@ -54,3 +54,5 @@ that is not marked [HUMAN]**, finishes it, ticks it, and commits and pushes. The
 
 ## Results log
 (one line per finished task: number | date | result | commit)
+
+1 | 2026-11-04 | tools/analyze_field.py done: calibration MAE/RMSE/bias per sensor, day-separated 4-model comparison, PDR + median/p95 latency, kWh/kg and L/kg (mean ± SD, 95% CI, Welch test), fault delays; 5 LaTeX snippets + summary.json. Tested end to end on simulated data in a temp folder only. Fixed a bug where lost packets of simulated trials were counted in strict mode. Template limit: 300 packet rows, so use 8-h windows. | see git log
