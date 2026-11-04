@@ -48,7 +48,7 @@ that is not marked [HUMAN]**, finishes it, ticks it, and commits and pushes. The
 - [x] 8. **App commissioning tab:** EN/RU tab in the web/mobile app to view and set per-machine alarm limits
       (`/api/limits`) and squeeze geometry (`/api/geometry`) with the device token; verify against a running server.
 - [x] 9. **Cover letter consistency:** contributions match the current paper (Sections V/VI/VII), 1 page if possible.
-- [ ] 10. **Supervisor copy of the corrections:** Word version of `Dissertation_Corrections.md` (tables kept).
+- [x] 10. **Supervisor copy of the corrections:** Word version of `Dissertation_Corrections.md` (tables kept).
 - [ ] 11. **Firmware boot test in an emulator** (Espressif QEMU): check that the image boots and reaches setup;
       record honestly what can and cannot be tested without hardware (no Wi-Fi in QEMU).
 - [ ] [HUMAN] 7. **Repository release** (blocked for the agent: creating a public release is the user's decision). Command: `gh release create v1.1.0 firmware/bin/woolwash_esp32_1.1.0.merged.bin firmware/bin/woolwash_esp32_1.1.0.bin firmware/bin/SHA256SUMS.txt --title "WoolWash-IoT 1.1.0 (firmware pre-release)" --notes-file firmware/RELEASE_NOTES_1.1.0.md --prerelease`
@@ -71,3 +71,4 @@ that is not marked [HUMAN]**, finishes it, ticks it, and commits and pushes. The
 7 | 2026-11-04 | Release creation denied by the safety classifier (public surface). Release notes saved to firmware/RELEASE_NOTES_1.1.0.md; task moved to [HUMAN] with the exact command. | see git log
 8 | 2026-11-05 | App tab Commissioning / Пусконаладка: view and save per-machine geometry and alarm limits with the device token (sessionStorage only). Server PUT /api/limits now coerces types and validates the merged ON/OFF and debounce values. Verified in headless Edge against a temp server: prefill, wrong token -> error, right token -> saved on server, RU labels, no JS errors; phone-width layout checked. 22 tests pass. | see git log
 9 | 2026-11-05 | Cover letter rewritten to match the paper (portal firmware, staged shrinking soft sensor, debounced alarms, three evidence layers V/VI/VII, honest scope of the simulation); 1 page at 10 pt. Reviewer candidates taken from cited work (Z. Ge; W. Yu / T. Dillon; I. Bianco) with TODOs to verify affiliation, e-mail and conflicts; no contact data invented. | see git log
+10 | 2026-11-05 | C:\Users\Nasiba\Desktop\Tuguzbayeva\Dissertation_Corrections.docx (outside the public repo, private document): headings, 4 tables, lists; severity emoji replaced by coloured [MUST FIX]/[SHOULD FIX]/[MINOR] labels. | not in git
