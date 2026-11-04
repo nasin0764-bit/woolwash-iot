@@ -1,18 +1,27 @@
-// ---- edit for your site ---------------------------------------------------
+// ---------------------------------------------------------------------------
+//  WoolWash-IoT firmware configuration
+//
+//  Wi-Fi, server URL, token and machine ID are NOT compiled in any more.
+//  They are entered once in the setup portal (Wi-Fi "WoolWash-Setup-xxxx",
+//  then open http://192.168.4.1) and stored in the ESP32 flash (NVS).
+//  Hold the BOOT button for 3 s while powering on to clear them.
+//
+//  The values below are only the DEFAULTS pre-filled in the portal form,
+//  plus sensor flags and calibration constants (change + recompile if needed).
+// ---------------------------------------------------------------------------
 #pragma once
 
-#define WIFI_SSID      "YOUR_WIFI"
-#define WIFI_PASS      "YOUR_PASSWORD"
-#define MACHINE_ID     "WW-01"
+#define FW_VERSION         "1.1.0"
 
-// Transport: 1 = HTTP POST to server, 0 = MQTT
-#define USE_HTTP       1
-#define SERVER_URL     "http://192.168.1.10:8000/api/telemetry"
-#define DEVICE_TOKEN   "changeme"
-#define MQTT_HOST      "192.168.1.10"
-#define MQTT_PORT      1883
+// ---- portal defaults --------------------------------------------------------
+#define DEFAULT_SERVER_URL "http://192.168.1.10:8000/api/telemetry"
+#define DEFAULT_TOKEN      "changeme"
+#define DEFAULT_MACHINE_ID "WW-01"
+#define DEFAULT_MQTT_HOST  ""          // empty = use HTTP
+#define DEFAULT_MQTT_PORT  1883
+#define SETUP_AP_PASSWORD  "woolwash123"  // password of the setup Wi-Fi (min 8 chars)
 
-#define PERIOD_MS      2000      // telemetry interval
+#define PERIOD_MS          2000        // telemetry interval
 
 // ---- sensor presence (set 0 if not installed) ------------------------------
 #define N_BOWLS        5

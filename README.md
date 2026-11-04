@@ -5,12 +5,23 @@ IoT monitoring + hybrid soft sensor for the resource-saving wool washing machine
 
 ```
 WoolWash-IoT/
-├─ firmware/woolwash_esp32/   ESP32 sensor node (Arduino) – edit config.h
+├─ firmware/
+│  ├─ woolwash_esp32/         ESP32 sensor node source (Arduino) – sensor flags in config.h
+│  ├─ bin/                    READY-MADE firmware: *.merged.bin (flash at 0x0) + SHA256SUMS.txt
+│  ├─ build.bat               reproducible build with arduino-cli (pinned versions)
+│  └─ flash.bat               flash over USB:  flash.bat COM5
 ├─ server/                    FastAPI server: ingest, SQLite, soft sensor, alarms, KPIs, CSV, WebSocket
 ├─ app/                       Web + mobile app (installable PWA), English / Russian
 ├─ simulator/                 Digital-twin simulator (same payload as the ESP32, tagged "sim")
-├─ paper/                     IEEE IoT Journal draft (IEEEtran LaTeX) – results are TODO until field data exist
-├─ docs/HARDWARE.md           Parts list, wiring, installation, field measurement protocol
+├─ tools/
+│  ├─ fill_template.py        fills docs/IEEE_IoT_Factory_Validation_Template.xlsx from the server
+│  └─ sim_study.py            simulation + bench study for the paper (results/sim_study, paper/figs)
+├─ results/sim_study/         outputs of sim_study.py (JSON)
+├─ paper/                     IEEE IoT Journal manuscript (IEEEtran LaTeX), cover letter, photos
+├─ docs/
+│  ├─ FIRMWARE.md             flash, Wi-Fi setup portal, build from source, message format
+│  ├─ HARDWARE.md             parts list, wiring, installation, field measurement protocol
+│  └─ IEEE_IoT_Factory_Validation_Template.xlsx
 ├─ start_server.bat           start the server
 └─ start_simulator.bat        start the simulator (fast mode, with lab samples)
 ```
@@ -26,9 +37,16 @@ Phone on the same Wi-Fi → open `http://<PC-IP>:8000` (find the IP with `ipconf
 Android Chrome: menu ⋮ → *Install app* · iPhone Safari: Share → *Add to Home Screen*.
 For use outside the plant, host the server on a VPS with HTTPS (needed for full PWA features on phones).
 
-### Real machine
-See `docs/HARDWARE.md`. Set `WW_TOKEN` (same as `DEVICE_TOKEN` in `config.h`) before starting the server
-on a real network. Optional MQTT: run Mosquitto and set `WW_MQTT_HOST=localhost`.
+### Real machine (ESP32)
+1. Wire the sensors: `docs/HARDWARE.md`.
+2. Flash `firmware/bin/woolwash_esp32_1.1.0.merged.bin` at **0x0**, in the browser via
+   https://espressif.github.io/esptool-js/ or with `firmware\flash.bat COM5`. No Arduino install needed.
+3. Phone → Wi-Fi **WoolWash-Setup-xxxx** (password `woolwash123`) → http://192.168.4.1 →
+   enter plant Wi-Fi, server URL `http://<PC-IP>:8000/api/telemetry`, token, machine ID.
+4. Start the server with the same token: `set WW_TOKEN=yourtoken` then `start_server.bat`.
+
+Details: `docs/FIRMWARE.md`. Optional MQTT: run Mosquitto, set `WW_MQTT_HOST=localhost` on the server and the
+broker host in the setup page.
 
 ## API
 | Method | Path | |
@@ -38,13 +56,17 @@ on a real network. Optional MQTT: run Mosquitto and set `WW_MQTT_HOST=localhost`
 | POST | /api/lab | `{machine, moisture_pct, note}` – oven-dry sample, refits soft sensor |
 | GET/PUT | /api/model/{id}, /api/geometry/{id} | soft-sensor info, machine geometry |
 | GET | /api/export/{id}.csv?hours= | CSV for analysis / paper |
+| GET | /api/validation/{id}/packets.csv, /calibration.csv | rows for the IEEE validation template |
 | WS | /ws | live stream |
 
 ## Simulator options
 ```
-python simulate.py --speed 60 --lab-every 30 --fault heater:3@1800 --fault drum@3600
+python simulate.py --speed 60 --lab-every 30 --fault heater:3@1800 --fault drum@3600 --loss 0.05
 ```
-Faults: `heater:<bowl>`, `leak:<bowl>`, `drum` at simulated second N.
+Faults: `heater:<bowl>`, `leak:<bowl>`, `drum` at simulated second N; `--loss` drops packets.
 
-> **Research integrity:** simulator output is for testing software only. Results in the dissertation or the
+## Paper study
+`python tools/sim_study.py` reproduces the *Simulation and Bench Study* section (≈10 min).
+
+> **Research integrity:** simulator output is for testing software only. Factory results in the
 > journal paper must come from measurements on the real machine (rows with `source = device`).
