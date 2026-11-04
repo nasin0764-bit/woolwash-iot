@@ -40,7 +40,7 @@ that is not marked [HUMAN]**, finishes it, ticks it, and commits and pushes. The
       numbers.
 - [x] 4. **Page budget:** tighten the paper text, especially Section VI, so that `main_5authors.pdf` is at most 6
       pages, leaving at least 2 pages for Section VII. Keep every number and claim intact.
-- [ ] 5. **Russian and Uzbek guides:** `docs/PLAN_RU.md` and `docs/PLAN_UZ.md` (Latin script), covering the
+- [x] 5. **Russian and Uzbek guides:** `docs/PLAN_RU.md` and `docs/PLAN_UZ.md` (Latin script), covering the
       step-by-step plan to submission, the factory commissioning checklist and the flashing/setup steps for the ESP32.
 - [ ] 6. **Printable data-collection forms** (PDF in `docs/forms/`): shift log (meter readings, wool mass, wool type),
       lab moisture sample log (wet/dry mass, 3 replicates), sensor calibration sheet, fault-test log. In English and
@@ -59,3 +59,4 @@ that is not marked [HUMAN]**, finishes it, ticks it, and commits and pushes. The
 2 | 2026-11-04 | pytest suite: 17 tests (soft-sensor stages, ingest/token/alerts, out-of-sample lab prediction, packet gap export, CSV export, fill_template safety, analyze_field metrics) all pass locally. CI workflow written to ci/ci.yml (tests + pinned firmware compile) but NOT active: the gh token lacks the workflow scope; activation steps are at the top of ci/ci.yml. | see git log
 3 | 2026-11-04 | Advisory now has a 30-s debounce, on/off hysteresis (800/700 NTU) and per-machine limits via GET/PUT /api/limits/{id} (token-protected; geometry PUT now token-protected too). S3 rerun: advisory active 64 % -> 37.8 % (default) -> 18.8 % (commissioned 820/700); all 56 simulated liquor changes preceded by an advisory; fault detection unchanged (60/60). 4 new tests (21 total) pass; Section VI text updated. | see git log
 4 | 2026-11-04 | Paper 7 -> 6 pages (Sec. III instrumentation, Sec. IV protocol, Sec. VII placeholders and Discussion condensed; all numbers and claims kept), ~2 pages free for Sec. VII within the 8-page free limit. main_5authors.pdf was locked by a PDF viewer; the 6-page build is paper/main_check.pdf (rebuild with check_pages.bat). | see git log
+5 | 2026-11-04 | docs/PLAN_RU.md and docs/PLAN_UZ.md (Latin script): goal, status, 8 steps, ESP32 flashing and portal setup, commissioning checklist. | see git log
