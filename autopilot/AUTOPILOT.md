@@ -45,12 +45,13 @@ that is not marked [HUMAN]**, finishes it, ticks it, and commits and pushes. The
 - [x] 6. **Printable data-collection forms** (PDF in `docs/forms/`): shift log (meter readings, wool mass, wool type),
       lab moisture sample log (wet/dry mass, 3 replicates), sensor calibration sheet, fault-test log. In English and
       Russian.
-- [ ] 7. **Repository release:** create GitHub release `v1.1.0` with the firmware binaries, SHA256SUMS and a short
-      changelog (`gh release create`).
+- [ ] [HUMAN] 7. **Repository release** (blocked for the agent: creating a public release is the user's decision). Command: `gh release create v1.1.0 firmware/bin/woolwash_esp32_1.1.0.merged.bin firmware/bin/woolwash_esp32_1.1.0.bin firmware/bin/SHA256SUMS.txt --title "WoolWash-IoT 1.1.0 (firmware pre-release)" --notes-file firmware/RELEASE_NOTES_1.1.0.md --prerelease`
 - [ ] [HUMAN] Factory measurements (docs/HARDWARE.md §5): needed for Section VII.
 - [ ] [HUMAN] Written approval of the full manuscript by all five authors; M. Anorkulov confirms his contribution.
 - [ ] [HUMAN] Bowl volume from the engineering drawing; patent certificate inventors.
 - [ ] [HUMAN] Journal submission (IEEE Author Portal, Traditional route).
+- [ ] [HUMAN] Install the autopilot scheduled task (blocked for the agent as persistence): `powershell -ExecutionPolicy Bypass -File autopilot\install_task.ps1`
+- [ ] [HUMAN] Enable CI: `gh auth refresh -h github.com -s workflow`, then copy ci/ci.yml to .github/workflows/ci.yml, commit and push
 
 ## Results log
 (one line per finished task: number | date | result | commit)
@@ -61,3 +62,6 @@ that is not marked [HUMAN]**, finishes it, ticks it, and commits and pushes. The
 4 | 2026-11-04 | Paper 7 -> 6 pages (Sec. III instrumentation, Sec. IV protocol, Sec. VII placeholders and Discussion condensed; all numbers and claims kept), ~2 pages free for Sec. VII within the 8-page free limit. main_5authors.pdf was locked by a PDF viewer; the 6-page build is paper/main_check.pdf (rebuild with check_pages.bat). | see git log
 5 | 2026-11-04 | docs/PLAN_RU.md and docs/PLAN_UZ.md (Latin script): goal, status, 8 steps, ESP32 flashing and portal setup, commissioning checklist. | see git log
 6 | 2026-11-04 | docs/forms/01-04 PDFs (A4 landscape, English + Russian): shift log, lab moisture log (wet basis, 3 replicates), sensor calibration sheet, supervised fault-test log; each maps to a template sheet or the analyze_field --faults CSV. Generator: tools/make_forms.py (reportlab 4.2.5, Arial/DejaVu). | see git log
+7 | 2026-11-04 | Release creation denied by the safety classifier (public surface). Release notes saved to firmware/RELEASE_NOTES_1.1.0.md; task moved to [HUMAN] with the exact command. | see git log
+
+ALL AUTONOMOUS TASKS DONE
