@@ -400,10 +400,12 @@ exclude Wi-Fi, which is evaluated in Sec.~\ref{sec:iot}.
 Faults were injected 20 times each into the simulator after a 1-h warm-up. All 60 were detected: heater failure in bowl~3
 after a median of 92\,s (max 110\,s), a level leak in bowl~2 after 200\,s (max 205\,s), and a drum-speed drop in the first
 message after onset ($\le$1\,s at the 2-s period). Both delays are set by the simulated thermal and level dynamics and by the thresholds, not measured
-plant behaviour. During 8\,h (14\,401 messages) of fault-free operation no fault alarm occurred, but the
-\emph{dirty-liquor advisory} was active in 64\,\% of messages because its 800\,NTU threshold lies below the simulated
-liquor-change policy (850\,NTU). This advisory threshold must therefore be set from the plant's actual liquor-change
-practice during commissioning.
+plant behaviour. During 8\,h (14\,401 messages) of fault-free operation no fault alarm occurred. A plain 800\,NTU
+threshold kept the \emph{dirty-liquor advisory} active in 64\,\% of messages, because the simulated plant changes
+liquor only at 850\,NTU. With a 30-s debounce and hysteresis (on 800, off 700\,NTU) this fell to 37.8\,\%, and with
+per-machine commissioned limits (on 820, off 700\,NTU) to 18.8\,\%; in both cases each of the 56 simulated liquor
+changes was preceded by an advisory, with 57 and 56 advisory episodes, respectively. The limits are therefore set per
+machine from the plant's liquor-change practice at commissioning (\texttt{PUT /api/limits}).
 
 % --------------------------------------------------------------------------
 \section{Results III: Prospective Factory IoT Validation}

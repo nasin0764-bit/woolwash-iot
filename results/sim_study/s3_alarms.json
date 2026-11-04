@@ -24,11 +24,39 @@
    "delay_s_max": 1.0
   }
  },
- "normal": {
+ "normal": {},
+ "normal_default": {
   "hours": 8,
   "messages": 14401,
   "alert_counts": {
-   "liquor_dirty": 9151
-  }
+   "liquor_dirty": 6646
+  },
+  "limits": {
+   "turbidity_max_ntu": 800.0,
+   "turbidity_off_ntu": 700.0,
+   "turbidity_debounce_n": 15
+  },
+  "advisory_active_pct": 37.8,
+  "advisory_episodes": 57,
+  "liquor_changes": 56,
+  "changes_preceded_by_advisory": 56,
+  "fault_alarm_messages": 0
+ },
+ "normal_commissioned": {
+  "hours": 8,
+  "messages": 14401,
+  "alert_counts": {
+   "liquor_dirty": 2830
+  },
+  "limits": {
+   "turbidity_max_ntu": 820.0,
+   "turbidity_off_ntu": 700.0,
+   "turbidity_debounce_n": 15
+  },
+  "advisory_active_pct": 18.8,
+  "advisory_episodes": 56,
+  "liquor_changes": 56,
+  "changes_preceded_by_advisory": 56,
+  "fault_alarm_messages": 0
  }
 }

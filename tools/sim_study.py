@@ -258,7 +258,8 @@ def s3():
     for f, (code, bowl) in cases.items():
         delays = []
         for seed in range(20):
-            m = Machine("WW-ALARM", dict(BASE_GEOM), seed=seed)
+            mid = f"WW-ALARM-{f}-{seed}"
+            m = Machine(mid, dict(BASE_GEOM), seed=seed)
             kind, _, idx = f.partition(":")
             onset = warmup + 600.0 + 37.0 * seed
             m.faults.append((kind, int(idx) if idx else 0, onset))
@@ -266,7 +267,7 @@ def s3():
             while m.t < onset + 7200:
                 p = m.step(dt)
                 p.pop("_true_moisture")
-                al = srv.alerts_for(p, 57.0)
+                al = srv.alerts_for(p, 57.0, mid)
                 if m.t >= onset and any(a["code"] == code and (bowl is None or a.get("bowl") == bowl) for a in al):
                     t_detect = m.t - onset
                     break
@@ -275,18 +276,47 @@ def s3():
         out["faults"][f] = {"alert_code": code, "runs": len(delays), "detected": len(ok),
                             "delay_s_median": statistics.median(ok) if ok else None,
                             "delay_s_max": max(ok) if ok else None}
-    # normal operation: count alerts after warm-up
-    m = Machine("WW-NORMAL", dict(BASE_GEOM), seed=99)
-    counts, steps = {}, 0
-    while m.t < warmup + 8 * 3600:
-        p = m.step(dt)
-        p.pop("_true_moisture")
-        if m.t < warmup:
-            continue
-        steps += 1
-        for a in srv.alerts_for(p, 57.0):
-            counts[a["code"]] = counts.get(a["code"], 0) + 1
-    out["normal"] = {"hours": 8, "messages": steps, "alert_counts": counts}
+    # normal operation (8 h after warm-up): fault alarms and the dirty-liquor advisory, with the default
+    # limits and with "commissioned" limits set just below the simulated liquor-change point (850 NTU)
+    commissioned = {"turbidity_max_ntu": 820.0, "turbidity_off_ntu": 700.0}
+    for label, mid, override in (("default", "WW-NORMAL-D", None), ("commissioned", "WW-NORMAL-C", commissioned)):
+        if override:
+            srv.set_limits(mid, override, x_token=srv.TOKEN)
+        L = srv.limits_of(mid)
+        m = Machine(mid, dict(BASE_GEOM), seed=99)
+        counts, steps, adv_msgs = {}, 0, 0
+        prev_turb = list(m.turb)
+        changes, episodes, preceded = 0, 0, 0
+        active = {i: False for i in range(1, 6)}
+        warned = {i: False for i in range(1, 6)}       # advisory seen since the last liquor change
+        while m.t < warmup + 8 * 3600:
+            p = m.step(dt)
+            p.pop("_true_moisture")
+            al = srv.alerts_for(p, 57.0, mid)
+            if m.t < warmup:
+                prev_turb = list(m.turb)
+                continue
+            steps += 1
+            dirty_now = {a["bowl"] for a in al if a["code"] == "liquor_dirty"}
+            adv_msgs += bool(dirty_now)
+            for a in al:
+                counts[a["code"]] = counts.get(a["code"], 0) + 1
+            for i in range(1, 6):
+                if i in dirty_now and not active[i]:
+                    episodes += 1
+                    warned[i] = True
+                active[i] = i in dirty_now
+                if m.turb[i - 1] < 0.7 * prev_turb[i - 1]:     # simulated partial liquor change
+                    changes += 1
+                    preceded += warned[i]
+                    warned[i] = False
+            prev_turb = list(m.turb)
+        out["normal_" + label] = {
+            "hours": 8, "messages": steps, "alert_counts": counts,
+            "limits": {k: L[k] for k in ("turbidity_max_ntu", "turbidity_off_ntu", "turbidity_debounce_n")},
+            "advisory_active_pct": round(100 * adv_msgs / steps, 1),
+            "advisory_episodes": episodes, "liquor_changes": changes, "changes_preceded_by_advisory": preceded,
+            "fault_alarm_messages": sum(v for k, v in counts.items() if k != "liquor_dirty")}
     (OUT / "s3_alarms.json").write_text(json.dumps(out, indent=1))
     print("S3:", json.dumps(out))
     return out

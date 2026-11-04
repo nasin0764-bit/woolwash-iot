@@ -39,7 +39,9 @@ LIMITS = {
     "temp_min": [55, 55, 50, 45, 40],
     "temp_max": [65, 65, 60, 55, 50],
     "level_min_cm": 40.0,
-    "turbidity_max_ntu": 800.0,
+    "turbidity_max_ntu": 800.0,     # dirty-liquor advisory switches ON above this ...
+    "turbidity_off_ntu": 700.0,     # ... and OFF only below this (hysteresis)
+    "turbidity_debounce_n": 15,     # ON only after this many consecutive messages above (15 x 2 s = 30 s)
     "omega_nom": 16.0,
     "omega_tol": 2.0,
     "moisture_max": 60.0,
@@ -57,6 +59,7 @@ CREATE INDEX IF NOT EXISTS ix_tel ON telemetry(machine, ts);
 CREATE TABLE IF NOT EXISTS lab(
   id INTEGER PRIMARY KEY, machine TEXT, ts REAL, moisture_pct REAL, note TEXT, op TEXT, geom TEXT);
 CREATE TABLE IF NOT EXISTS machines(id TEXT PRIMARY KEY, geom TEXT);
+CREATE TABLE IF NOT EXISTS machine_limits(id TEXT PRIMARY KEY, limits TEXT);
 """
 )
 # columns added for the factory-validation template (packet log, out-of-sample calibration)
@@ -109,27 +112,59 @@ def op_features(p: dict) -> dict:
     }
 
 
-def alerts_for(p: dict, moisture: float) -> list[dict]:
+_limit_cache: dict[str, dict] = {}
+
+
+def limits_of(machine: str | None) -> dict:
+    """Default LIMITS overridden by the per-machine values set at commissioning (PUT /api/limits/{id})."""
+    if not machine:
+        return LIMITS
+    if machine not in _limit_cache:
+        r = q("SELECT limits FROM machine_limits WHERE id=?", (machine,), one=True)
+        _limit_cache[machine] = {**LIMITS, **(json.loads(r[0]) if r else {})}
+    return _limit_cache[machine]
+
+
+# dirty-liquor advisory state per (machine, bowl): debounce counter + latched flag
+_adv: dict[tuple, dict] = {}
+
+
+def _liquor_dirty(machine, bowl, tb, L, update):
+    if machine is None:                                  # stateless use (e.g. tests, one-off checks)
+        return tb > L["turbidity_max_ntu"]
+    st = _adv.setdefault((machine, bowl), {"active": False, "count": 0})
+    if update:
+        if not st["active"]:
+            st["count"] = st["count"] + 1 if tb > L["turbidity_max_ntu"] else 0
+            if st["count"] >= int(L["turbidity_debounce_n"]):
+                st["active"] = True
+        elif tb < L["turbidity_off_ntu"]:
+            st["active"], st["count"] = False, 0
+    return st["active"]
+
+
+def alerts_for(p: dict, moisture: float, machine: str | None = None, update: bool = True) -> list[dict]:
+    L = limits_of(machine)
     out = []
     for i, b in enumerate(p.get("bowls", [])):
         n = b.get("id", i + 1)
         t = b.get("temp_c")
         if t is not None and i < 5:
-            if t < LIMITS["temp_min"][i]:
+            if t < L["temp_min"][i]:
                 out.append({"level": "warn", "code": "temp_low", "bowl": n, "value": t})
-            elif t > LIMITS["temp_max"][i]:
+            elif t > L["temp_max"][i]:
                 out.append({"level": "crit", "code": "temp_high", "bowl": n, "value": t})
         lv = b.get("level_cm")
-        if lv is not None and lv < LIMITS["level_min_cm"]:
+        if lv is not None and lv < L["level_min_cm"]:
             out.append({"level": "crit", "code": "level_low", "bowl": n, "value": lv})
         tb = b.get("turbidity_ntu")
-        if tb is not None and tb > LIMITS["turbidity_max_ntu"]:
+        if tb is not None and _liquor_dirty(machine, n, tb, L, update):
             out.append({"level": "warn", "code": "liquor_dirty", "bowl": n, "value": tb})
     for s in p.get("squeeze", []):
         w = s.get("drum_omega")
-        if w is not None and abs(w - LIMITS["omega_nom"]) > LIMITS["omega_tol"]:
+        if w is not None and abs(w - L["omega_nom"]) > L["omega_tol"]:
             out.append({"level": "warn", "code": "omega_dev", "stage": s.get("stage"), "value": w})
-    if moisture > LIMITS["moisture_max"]:
+    if moisture > L["moisture_max"]:
         out.append({"level": "warn", "code": "moisture_high", "value": round(moisture, 2)})
     return out
 
@@ -146,7 +181,7 @@ def ingest(p: dict) -> dict:
         ts = time.time()
     geom = geom_of(machine)
     m = sensor_of(machine).predict(geom, op_features(p))
-    al = alerts_for(p, m)
+    al = alerts_for(p, m, machine)
     q(
         "INSERT INTO telemetry(machine,ts,source,payload,moisture_pred,energy_kwh,water_l,feed_kg,rx_ms)"
         " VALUES(?,?,?,?,?,?,?,?,?)",
@@ -243,7 +278,8 @@ def latest(machine: str):
     if not r:
         raise HTTPException(404, "no data")
     p = json.loads(r[1])
-    return {"ts": r[0], "data": p, "moisture_pred": round(r[2], 2), "alerts": alerts_for(p, r[2])}
+    return {"ts": r[0], "data": p, "moisture_pred": round(r[2], 2),
+            "alerts": alerts_for(p, r[2], machine, update=False)}
 
 
 @app.get("/api/history/{machine}")
@@ -297,7 +333,9 @@ def model(machine: str):
 
 
 @app.put("/api/geometry/{machine}")
-def set_geom(machine: str, g: dict):
+def set_geom(machine: str, g: dict, x_token: str = Header(default="")):
+    if x_token != TOKEN:
+        raise HTTPException(401, "bad token")
     geom = {**geom_of(machine), **{k: float(v) for k, v in g.items() if k in DEFAULT_GEOM}}
     q("INSERT OR REPLACE INTO machines VALUES(?,?)", (machine, json.dumps(geom)))
     return geom
@@ -306,6 +344,28 @@ def set_geom(machine: str, g: dict):
 @app.get("/api/config")
 def get_config():
     return LIMITS
+
+
+@app.get("/api/limits/{machine}")
+def get_limits(machine: str):
+    return limits_of(machine)
+
+
+@app.put("/api/limits/{machine}")
+def set_limits(machine: str, new: dict, x_token: str = Header(default="")):
+    """Commissioning: override alarm limits for one machine, e.g. {"turbidity_max_ntu": 850}."""
+    if x_token != TOKEN:
+        raise HTTPException(401, "bad token")
+    unknown = [k for k in new if k not in LIMITS]
+    if unknown:
+        raise HTTPException(400, f"unknown limit(s): {unknown}")
+    r = q("SELECT limits FROM machine_limits WHERE id=?", (machine,), one=True)
+    cur = {**(json.loads(r[0]) if r else {}), **new}
+    q("INSERT OR REPLACE INTO machine_limits VALUES(?,?)", (machine, json.dumps(cur)))
+    _limit_cache.pop(machine, None)
+    for key in [k for k in _adv if k[0] == machine]:
+        _adv.pop(key)                     # restart the advisory state with the new limits
+    return limits_of(machine)
 
 
 @app.get("/api/export/{machine}.csv")

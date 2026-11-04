@@ -8,3 +8,4 @@ date | task | question | decision | reason
 2026-11-04 | 1 | Trial containing some simulated rows | Exclude the whole trial in strict mode | Lost-packet rows carry no SIM mark; partial exclusion gave a false 0 % delivery
 2026-11-04 | setup | Scheduled-task install was blocked by the safety classifier | Leave the install to the user; do not work around it | Persistence must be the user's own action
 2026-11-04 | 2 | CI push needs the workflow scope, which the token lacks | Keep the workflow in ci/ci.yml with activation steps | A rejected push would block all other commits; scope changes are the user's decision
+2026-11-04 | 3 | Commissioned advisory threshold for the S3 demonstration | ON 820 / OFF 700 NTU, just below the simulated 850 NTU liquor-change point | Shows an advance warning before each change without being circular (ON = 850 would trivially never fire)
