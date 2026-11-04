@@ -1,40 +1,44 @@
-\documentclass[11pt]{letter}
-\usepackage[margin=2.5cm]{geometry}
+\documentclass[10pt]{letter}
+\Sepackage[margin=2cm]{geometry}
 \usepackage{xcolor}
 \newcommand{\TODO}[1]{\textcolor{red}{[TODO: #1]}}
-\signature{Robiya Tuguzbayeva (corresponding author)\\on behalf of all co-authors\\Tashkent Institute of Textile and Light Industry\\ORCID: 0009-0001-8480-9696\\trobiya89@mail.ru}
+\signature{Robiya Tuguzbayeva (corresponding author), on behalf of all co-authors\\Tashkent Institute of Textile and Light Industry\\ORCID: 0009-0001-8480-9696, trobiya89@mail.ru}
 \address{Tashkent Institute of Textile and Light Industry\\5 Shohjahon Street\\Tashkent 100100, Uzbekistan}
 \begin{document}
 \begin{letter}{Editor-in-Chief\\IEEE Internet of Things Journal}
 \opening{Dear Editor-in-Chief,}
 
 We submit the manuscript \emph{``An IoT-Enabled Hybrid Soft Sensor for Real-Time Residual-Moisture Monitoring and
-Resource Accounting in Compact Wool Scouring Machines''} for consideration as a \textbf{Regular Paper} in the
-IEEE Internet of Things Journal. We request \textbf{Traditional (non-open-access) publication}.
+Resource Accounting in Compact Wool Scouring Machines''} for consideration as a \textbf{Regular Paper}. We request
+\textbf{Traditional (non-open-access) publication}.
 
-The paper addresses IoT trials/experiments and IoT application design, both within the scope of the journal. Its main
-contributions are: (i) a low-cost ESP32-based IoT architecture for wool scouring machines, which today operate without
-instrumentation; (ii) a hybrid soft sensor that uses a design-of-experiments model of the squeezing device as a
-physics-informed prior and is recalibrated online from sparse laboratory samples; (iii) real-time per-kilogram energy and
-water indicators and fault alarms; and (iv) a reproducible reanalysis of the historical mechanical-process baseline
-and an open-source implementation (https://github.com/nasin0764-bit/woolwash-iot) with a defined prospective
-field-validation protocol. \TODO{Update (iv) with the completed field validation before submission.}
+The work addresses IoT application design and IoT trials in an industrial setting that is currently not instrumented:
+wool scouring in small regional plants. Its contributions are (i) a low-cost ESP32-based architecture with a captive
+set-up portal, HTTP/MQTT transport, server analytics and a bilingual web/mobile application; (ii) a hybrid soft sensor
+for residual moisture that uses a design-of-experiments model of the squeezing device as a prior, with a staged,
+offset-shrinking online calibration from sparse laboratory samples; (iii) per-kilogram energy and water indicators and
+alarm rules with debounce and hysteresis; and (iv) three clearly separated layers of evidence: a reproducible
+reanalysis of historical mechanical-process data, a simulation and software bench study, and a factory validation
+\TODO{describe the completed field campaign: N shifts at plant, held-out accuracy, delivery ratio, latency, kWh/kg,
+L/kg}. The simulation reports openly where the prior helps (cold start, few labels, geometry changes) and where it
+does not (many labels at a fixed geometry). Code, firmware and analysis scripts are public at
+https://github.com/nasin0764-bit/woolwash-iot.
 
-The manuscript is original, has not been published previously, and is not under consideration elsewhere.
+The manuscript is original, has not been published previously and is not under consideration elsewhere.
 \TODO{If any part was presented at a conference, cite it here and explain the extension.}
-\TODO{Insert ONLY after every author has read and approved the complete manuscript:}
-All authors (R.~Tuguzbayeva, S.~Khakimov, F.~Dustova, R.~Rosulov, and M.~Anorkulov) have approved the
-submission and declare no conflicts of interest.
+\TODO{Insert the next sentence ONLY after every author has read and approved the complete manuscript:}
+All authors (R.~Tuguzbayeva, S.~Khakimov, F.~Dustova, R.~Rosulov and M.~Anorkulov) have approved the submission and
+declare no conflicts of interest.
+\TODO{Author contributions: confirm with each author. Proposed for M.~Anorkulov (pending his confirmation):
+statistical reanalysis of the factorial experiment, regression coefficients and RMSE/MAE/$R^2$.}
 
-\TODO{Author contributions -- confirm with each author before submission. Proposed for M.~Anorkulov (pending his
-confirmation): statistical reanalysis, including verification of the factorial experiment, regression coefficients,
-and RMSE/MAE/$R^2$ calculations.}
-
-Suggested reviewers (no conflict of interest, outside our institution):
+Suggested reviewers (no joint work with the authors):
+\TODO{Candidates are authors of cited work. Verify the current affiliation and e-mail of each, and that there is no
+conflict of interest, before submission:}
 \begin{enumerate}
-\item \TODO{Name, affiliation, e-mail -- industrial IoT / soft sensors}
-\item \TODO{Name, affiliation, e-mail -- textile machinery / wool processing}
-\item \TODO{Name, affiliation, e-mail -- edge computing for manufacturing}
+\item Zhiqiang Ge, soft sensors / industrial data analytics (cited: Sun and Ge, IEEE TII 2021) \TODO{affiliation, e-mail}
+\item Wei Yu or Tharam Dillon, IoT monitoring in smart factories (cited: IEEE IoT-J 2022, IEEE TII 2023) \TODO{affiliation, e-mail}
+\item Isabella Bianco, life-cycle assessment of wool processing (cited: J. Clean. Prod. 2023) \TODO{affiliation, e-mail}
 \end{enumerate}
 
 \closing{Sincerely,}
