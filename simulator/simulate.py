@@ -133,6 +133,8 @@ def main():
     ap.add_argument("--geom", default="2,250,3", help="d_hole,d_drum,gap in mm")
     ap.add_argument("--mqtt", default=None, help="MQTT broker host (instead of HTTP)")
     ap.add_argument("--steps", type=int, default=0, help="stop after N messages (0 = forever)")
+    ap.add_argument("--loss", type=float, default=0.0,
+                    help="probability of dropping a packet (tests packet-delivery logging)")
     a = ap.parse_args()
 
     d, D, g = (float(x) for x in a.geom.split(","))
@@ -151,12 +153,17 @@ def main():
 
     next_lab = a.lab_every * 60 if a.lab_every else None
     n = 0
+    boot_id = random.randrange(1 << 24)
+    drop = random.Random(7)
     print(f"simulating {a.machine} -> {'mqtt://' + a.mqtt if mq else a.server}  (Ctrl+C to stop)")
     while True:
         p = m.step(a.interval * a.speed)
         true_w = p.pop("_true_moisture")
+        p["seq"], p["boot_id"], p["tx_ms"] = n, boot_id, round(time.time() * 1000)
         try:
-            if mq:
+            if a.loss and drop.random() < a.loss:
+                pred = "LOST"
+            elif mq:
                 mq.publish(f"woolwash/{a.machine}/telemetry", json.dumps(p))
                 pred = "?"
             else:

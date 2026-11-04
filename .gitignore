@@ -11,3 +11,4 @@ paper/*.synctex.gz
 # local secrets
 firmware/woolwash_esp32/config.local.h
 .env
+paper/main_build.pdf

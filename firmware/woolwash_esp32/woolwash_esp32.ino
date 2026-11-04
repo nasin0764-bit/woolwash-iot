@@ -23,6 +23,7 @@
 #include <OneWire.h>
 #include <DallasTemperature.h>
 #include <time.h>
+#include <sys/time.h>
 #include "config.h"
 #if HAS_PZEM
 #include <PZEM004Tv30.h>
@@ -63,13 +64,16 @@ void IRAM_ATTR onHall() {
 
 double waterTotalL = 0, feedTotalKg = 0, energyKwh0 = -1;
 uint32_t lastSend = 0;
+uint32_t txSeq = 0;        // increments on every transmit attempt (gaps at server = lost packets)
+uint32_t bootId = 0;       // random per boot, separates sequence counters across restarts
 
 void wifiUp() {
   if (WiFi.status() == WL_CONNECTED) return;
   WiFi.mode(WIFI_STA);
   WiFi.begin(WIFI_SSID, WIFI_PASS);
   for (int i = 0; i < 40 && WiFi.status() != WL_CONNECTED; i++) delay(250);
-  if (WiFi.status() == WL_CONNECTED) configTime(5 * 3600, 0, "pool.ntp.org");  // UTC+5 Tashkent
+  // keep the clock in UTC (epoch ms in the template is UTC); NTP sync is required for latency
+  if (WiFi.status() == WL_CONNECTED) configTime(0, 0, "pool.ntp.org", "time.google.com");
 }
 
 float readLevelCm(uint8_t i) {
@@ -92,6 +96,7 @@ float readTurbidity(uint8_t i) {
 
 void setup() {
   Serial.begin(115200);
+  bootId = esp_random() & 0xFFFFFF;
   pinMode(PIN_TRIG, OUTPUT);
   for (uint8_t i = 0; i < 5; i++) pinMode(PIN_ECHO[i], INPUT);
   pinMode(PIN_FLOW, INPUT_PULLUP);
@@ -134,6 +139,11 @@ void loop() {
   doc["machine_id"] = MACHINE_ID;
   doc["source"] = "device";
   time_t ts; time(&ts); doc["ts"] = (double)ts;   // server substitutes its time if NTP not synced
+  // packet-delivery / latency logging (IEEE validation template, sheet "Packet delivery")
+  struct timeval tv; gettimeofday(&tv, nullptr);
+  doc["seq"] = txSeq++;
+  doc["boot_id"] = bootId;
+  if (tv.tv_sec > 1600000000) doc["tx_ms"] = (double)tv.tv_sec * 1000.0 + tv.tv_usec / 1000;
 
   JsonArray bowls = doc["bowls"].to<JsonArray>();
   for (uint8_t i = 0; i < N_BOWLS; i++) {

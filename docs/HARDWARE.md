@@ -77,3 +77,19 @@ The paper needs **real, repeatable measurements**. Suggested campaign (at "Oqbo'
 
 Record for every lab sample: time, bowl/stage, wool type (spring/autumn), wet mass, dry mass, moisture %.
 Export CSV from the dashboard (Trends → Export CSV) after every shift and back it up.
+
+## 6. Recording validation data (`docs/IEEE_IoT_Factory_Validation_Template.xlsx`)
+
+| Template sheet | Where the data comes from | How |
+|---|---|---|
+| Sensor calibration | Lab oven-dry moisture (reference) vs soft-sensor prediction made **before** that sample was used for training | automatic: `tools/fill_template.py` |
+| Sensor calibration (temperature, level, flow, ω) | Reference thermometer / tape / bucket / tachometer vs IoT reading | enter by hand during commissioning (§4) |
+| Packet delivery | Every packet carries `seq`, `boot_id`, `tx_ms`; server stores `rx_ms`; gaps = lost packets | automatic: `tools/fill_template.py` |
+| Water energy batches | Physical water meter and kWh meter readings, weighed wool batch mass | by hand (meters are the reference) |
+
+```
+python tools/fill_template.py docs/IEEE_IoT_Factory_Validation_Template.xlsx results/trial_A.xlsx ^
+       --machine WW-01 --hours 8 --trial A-2026-11-10
+```
+Latency is only valid when the ESP32 (NTP) and the server PC are both clock-synchronised; check that the
+template's "Negative latencies" count is 0. The script refuses simulated data unless `--allow-sim` is given.

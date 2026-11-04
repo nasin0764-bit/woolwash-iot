@@ -59,6 +59,13 @@ CREATE TABLE IF NOT EXISTS lab(
 CREATE TABLE IF NOT EXISTS machines(id TEXT PRIMARY KEY, geom TEXT);
 """
 )
+# columns added for the factory-validation template (packet log, out-of-sample calibration)
+for _sql in ("ALTER TABLE telemetry ADD COLUMN rx_ms REAL",
+             "ALTER TABLE lab ADD COLUMN pred_before REAL"):
+    try:
+        db.execute(_sql)
+    except sqlite3.OperationalError:
+        pass  # column already exists
 
 
 def q(sql, args=(), one=False):
@@ -132,6 +139,7 @@ loop_ref: dict = {}
 
 
 def ingest(p: dict) -> dict:
+    rx_ms = time.time() * 1000.0  # server receive time (UTC epoch ms) for latency analysis
     machine = str(p.get("machine_id", "WW-01"))
     ts = float(p.get("ts") or time.time())
     if ts < 1e9:  # device without RTC/NTP sent uptime seconds
@@ -140,10 +148,10 @@ def ingest(p: dict) -> dict:
     m = sensor_of(machine).predict(geom, op_features(p))
     al = alerts_for(p, m)
     q(
-        "INSERT INTO telemetry(machine,ts,source,payload,moisture_pred,energy_kwh,water_l,feed_kg)"
-        " VALUES(?,?,?,?,?,?,?,?)",
+        "INSERT INTO telemetry(machine,ts,source,payload,moisture_pred,energy_kwh,water_l,feed_kg,rx_ms)"
+        " VALUES(?,?,?,?,?,?,?,?,?)",
         (machine, ts, p.get("source", "device"), json.dumps(p), m,
-         p.get("energy_kwh"), p.get("water_total_l"), p.get("feed_total_kg")),
+         p.get("energy_kwh"), p.get("water_total_l"), p.get("feed_total_kg"), rx_ms),
     )
     msg = {"type": "telemetry", "machine": machine, "ts": ts, "data": p,
            "moisture_pred": round(m, 2), "alerts": al}
@@ -269,8 +277,10 @@ def add_lab(s: LabSample):
     r = q("SELECT payload FROM telemetry WHERE machine=? ORDER BY ts DESC LIMIT 1", (s.machine,), one=True)
     op = op_features(json.loads(r[0])) if r else {}
     geom = geom_of(s.machine)
-    q("INSERT INTO lab(machine,ts,moisture_pct,note,op,geom) VALUES(?,?,?,?,?,?)",
-      (s.machine, time.time(), s.moisture_pct, s.note, json.dumps(op), json.dumps(geom)))
+    # prediction made BEFORE this sample is used for training = honest out-of-sample error
+    pred_before = sensor_of(s.machine).predict(geom, op)
+    q("INSERT INTO lab(machine,ts,moisture_pct,note,op,geom,pred_before) VALUES(?,?,?,?,?,?,?)",
+      (s.machine, time.time(), s.moisture_pct, s.note, json.dumps(op), json.dumps(geom), pred_before))
     sensors.pop(s.machine, None)
     return {"ok": True, "model": sensor_of(s.machine).info()}
 
@@ -323,6 +333,59 @@ def export(machine: str, hours: float = 24):
 
     return StreamingResponse(gen(), media_type="text/csv",
                              headers={"Content-Disposition": f"attachment; filename={machine}.csv"})
+
+
+def _csv_response(header, rows, name):
+    buf = io.StringIO()
+    w = csv.writer(buf)
+    w.writerow(header)
+    w.writerows(rows)
+    return StreamingResponse(iter([buf.getvalue()]), media_type="text/csv",
+                             headers={"Content-Disposition": f"attachment; filename={name}"})
+
+
+@app.get("/api/validation/{machine}/packets.csv")
+def packets_csv(machine: str, hours: float = 24, trial: str = ""):
+    """Rows for the 'Packet delivery' sheet of IEEE_IoT_Factory_Validation_Template.xlsx.
+    One row per transmitted sequence number; gaps in the sequence are reported as lost packets
+    (their TX time is unknown to the server and left blank)."""
+    rows = q("SELECT payload, rx_ms, source FROM telemetry WHERE machine=? AND ts>=? ORDER BY rx_ms",
+             (machine, time.time() - hours * 3600))
+    by_boot: dict = {}
+    for pl, rx, src in rows:
+        p = json.loads(pl)
+        if "seq" not in p:
+            continue
+        by_boot.setdefault(str(p.get("boot_id", "0")), {})[int(p["seq"])] = (p.get("tx_ms"), rx, src)
+    out = []
+    for boot, seqs in by_boot.items():
+        for s in range(min(seqs), max(seqs) + 1):
+            tid = trial or f"{machine}-{boot}"
+            if s in seqs:
+                tx, rx, src = seqs[s]
+                note = "SIMULATED" if src == "sim" else ""
+                out.append([tid, s, tx if tx else "", round(rx) if rx else "", "", "", "Wi-Fi/HTTP", note])
+            else:
+                out.append([tid, s, "", "", "", "", "Wi-Fi/HTTP", "lost (sequence gap; TX time not logged)"])
+    hdr = ["Trial ID", "TX sequence #", "TX UTC epoch (ms)", "RX UTC epoch (ms)", "Received?",
+           "Latency (ms)", "Gateway / link", "Notes / reason lost"]
+    return _csv_response(hdr, out, f"{machine}_packets.csv")
+
+
+@app.get("/api/validation/{machine}/calibration.csv")
+def calibration_csv(machine: str, trial: str = ""):
+    """Rows for the 'Sensor calibration' sheet: oven-dry lab moisture (reference) vs the soft-sensor
+    prediction made BEFORE that sample was used for training (out-of-sample)."""
+    rows = q("SELECT ts, moisture_pct, pred_before, note FROM lab WHERE machine=? ORDER BY ts", (machine,))
+    out = []
+    for ts, ref, pred, note in rows:
+        iso = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(ts))
+        out.append([trial or machine, "Residual moisture soft sensor (%)", machine, iso, ref,
+                    "" if pred is None else round(pred, 3),
+                    f"Oven-dry 105 C reference. {note}".strip()])
+    hdr = ["Trial ID", "Sensor type", "Sensor ID", "UTC timestamp", "Reference reading", "IoT reading",
+           "Reference instrument / notes"]
+    return _csv_response(hdr, out, f"{machine}_calibration.csv")
 
 
 @app.websocket("/ws")
