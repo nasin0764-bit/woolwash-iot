@@ -1,0 +1,11 @@
+AUTOPILOT RUN. The user is not present and has authorised unattended work.
+Open and follow C:\Users\Nasiba\Desktop\Tuguzbayeva\WoolWash-IoT\autopilot\AUTOPILOT.md exactly.
+Take the first unchecked task that is not marked [HUMAN], complete and verify it, tick it, add a line to the
+Results log, commit and push. Then continue with the next open task in the same way.
+Do not ask the user anything. For unclear choices, ask a subagent with the Agent tool using model fable, then decide
+and log the decision in autopilot\DECISIONS.md.
+Respect every rule in AUTOPILOT.md, especially research integrity: no invented factory data, Sections V, VI and VII
+stay separate, no journal submission, no emails, no visibility changes, no force-push.
+If a usage limit is close, stop at a clean point: commit what is finished and note the state of the current task in
+the Results log, so the next run can continue from there.
+When no open autonomous task is left, write ALL AUTONOMOUS TASKS DONE at the end of AUTOPILOT.md and stop.
