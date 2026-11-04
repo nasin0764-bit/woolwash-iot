@@ -55,19 +55,37 @@ class SoftSensor:
         self.n = 0
         self.rmse = None
 
+    # Staged calibration (tools/sim_study.py):
+    #   n = 0            -> DoE prior only
+    #   1 <= n < N_FULL  -> plant offset c only, shrunk towards 0 (= towards the DoE prior)
+    #   n >= N_FULL      -> c + operating-condition weights w (ridge)
+    # Offset shrinkage = Gaussian prior c ~ N(0, TAU_C^2) with lab noise SD LAB_SD:
+    #   penalty LAM_C = LAB_SD^2 / TAU_C^2, i.e. c = sum(r) / (n + LAM_C) in the bias-only stage.
+    # LAB_SD = pooled replicate SD of the dissertation's Table 3.9 (0.664 pp);
+    # TAU_C = 1.0 pp is an ASSUMED prior uncertainty of the plant offset.
+    N_FULL = 5
+    LAB_SD = 0.664
+    TAU_C = 1.0
+    SHRINK_C = True
+
     def fit(self, samples: list[dict]) -> None:
         """samples: dicts with geometry, operating features and measured 'moisture_pct'."""
         self.n = len(samples)
-        if self.n < 3:
-            self.w[:] = 0.0
-            self.c = 0.0
-            self.rmse = None
+        self.w = np.zeros(len(FEATURES))
+        self.c = 0.0
+        self.rmse = None
+        if self.n == 0:
+            return
+        lam_c = (self.LAB_SD / self.TAU_C) ** 2 if self.SHRINK_C else 1e-6
+        r = np.array([s["moisture_pct"] - prior(s["d_hole"], s["d_drum"], s["gap"]) for s in samples])
+        if self.n < self.N_FULL:
+            self.c = float(r.sum() / (self.n + lam_c))
+            self.rmse = float(np.sqrt(np.mean((r - self.c) ** 2)))
             return
         Phi = np.array([features(s) for s in samples])
-        r = np.array([s["moisture_pct"] - prior(s["d_hole"], s["d_drum"], s["gap"]) for s in samples])
         A = np.hstack([Phi, np.ones((self.n, 1))])
         reg = self.lam * np.eye(A.shape[1])
-        reg[-1, -1] = 1e-6  # do not shrink the bias
+        reg[-1, -1] = lam_c  # offset shrinkage (same prior as above)
         theta = np.linalg.solve(A.T @ A + reg, A.T @ r)
         self.w, self.c = theta[:-1], float(theta[-1])
         pred = A @ theta

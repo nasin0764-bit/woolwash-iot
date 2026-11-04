@@ -1,0 +1,23 @@
+{
+ "host": {
+  "cpu": "Intel(R) Core(TM) i9-14900HX",
+  "python": "3.9.13",
+  "os": "Windows-10-10.0.26200-SP0"
+ },
+ "payload_bytes": 638,
+ "payload_mb_per_day_at_2s": 27.56,
+ "inproc_ingest_ms": {
+  "n": 5000,
+  "median": 2.0249500000204534,
+  "p95": 2.3784999999634238,
+  "max": 19.202599999971426
+ },
+ "http_localhost_rtt_ms": {
+  "n": 2000,
+  "median": 15.702700000019831,
+  "p95": 32.0133000000169,
+  "max": 35.56960000003073
+ },
+ "http_sequential_msgs_per_s": 62.1,
+ "machines_supported_at_2s_sequential": 124
+}

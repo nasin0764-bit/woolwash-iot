@@ -63,9 +63,12 @@ installed power for the existing and improved machines, respectively. These
 results describe the mechanical process, not performance of the proposed IoT
 system. Sensor calibration, held-out soft-sensor accuracy, packet delivery,
 network latency, and metered per-kilogram resource use remain to be measured in
-a prospective field study. The paper therefore reports a reproducible retrospective
-baseline and an implementation and validation protocol, not a validated factory
-IoT deployment.
+a prospective field study. In a simulation under stated assumptions, the hybrid
+estimator kept a root-mean-square error of 0.42--0.50 percentage points after a change of
+squeezing geometry, versus 1.0--2.2 points for purely data-driven models; the server software
+processed a message in a median of 2.0\,ms on a workstation. The paper therefore reports a
+reproducible retrospective baseline, a simulation and bench study, and an implementation and
+validation protocol, not a validated factory IoT deployment.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -117,7 +120,8 @@ transport, server-side analytics and an installable bilingual (EN/RU) web/mobile
 (geometry prior) with an online, regularised correction for operating conditions, calibrated from sparse laboratory samples.
 \item Real-time per-kilogram resource indicators (kWh/kg, L/kg) and rule-based fault alarms (heater failure, low level,
 dirty liquor, drum speed deviation).
-\item Reanalysis of the historical mechanical-process baseline and an open-source IoT implementation at
+\item Reanalysis of the historical mechanical-process baseline, a reproducible simulation and bench study, and an
+open-source IoT implementation (firmware, ready-made binaries, server, application) at
 \url{https://github.com/nasin0764-bit/woolwash-iot}; the prospective field validation is defined but has not yet
 been completed.
 \end{enumerate}
@@ -140,6 +144,7 @@ W_0 = 57.31 + 0.81X_1 - 0.95X_2 + 0.30X_3 \quad [\%].
 \end{equation}
 
 \subsection{Hybrid soft sensor}
+\label{sec:hybrid}
 Equation~\eqref{eq:prior} captures geometry only. During operation, moisture also depends on the drum angular speed
 $\omega$, the feed rate $q$, the liquor temperature $T$ and the liquor turbidity $\tau$. With normalised deviations
 $\boldsymbol\phi=[(\omega-\omega_0)/s_\omega,\,(q-q_0)/s_q,\,(T-T_0)/s_T,\,(\tau-\tau_0)/s_\tau]^\top$ we model
@@ -148,12 +153,16 @@ $\boldsymbol\phi=[(\omega-\omega_0)/s_\omega,\,(q-q_0)/s_q,\,(T-T_0)/s_T,\,(\tau
 \end{equation}
 where $(\mathbf w,c)$ minimise $\sum_i (W_i - W_{0,i} - \mathbf w^\top\boldsymbol\phi_i - c)^2 + \lambda\|\mathbf w\|^2$
 over laboratory samples $W_i$ taken after the squeezer and dried at 105\,$^\circ$C. The model is refitted on the server
-each time a sample is added; with no samples it reduces to the DoE prior.
+each time a sample is added, in three stages: with $n=0$ samples it is the DoE prior; for $1\le n<5$ only the plant
+offset is estimated, $c=\sum_i r_i/(n+\lambda_c)$ with $\mathbf w=\mathbf 0$; for $n\ge5$ the full correction is
+fitted ($\lambda=1$). The offset penalty $\lambda_c=\sigma_{\rm lab}^2/\tau_c^2$ corresponds to a Gaussian prior
+$c\sim\mathcal N(0,\tau_c^2)$, with the laboratory noise $\sigma_{\rm lab}=0.664$\,pp taken from the pooled replicate
+variance of Table~\ref{tab:doe} and an \emph{assumed} prior plant-offset uncertainty $\tau_c=1$\,pp.
+At a single, fixed geometry $W_0$ is a constant that the unpenalised bias $c$ absorbs, so the hybrid estimator then
+coincides with ordinary ridge regression; the prior adds information only at cold start and when the geometry changes
+(another drum, gap or mesh, or another machine). Sec.~\ref{sec:sim} quantifies both cases in simulation.
 The DoE regression is evaluated in Sec.~\ref{sec:baseline} using its historical observations.
-A comparative assessment of the proposed hybrid estimator, a DoE-only baseline,
-ordinary ridge regression, and random forest requires temporally held-out field
-samples. No such model comparison is claimed from the retrospective geometry
-experiment.
+A comparative assessment on temporally held-out field samples is reserved for Sec.~\ref{sec:iot}.
 
 % --------------------------------------------------------------------------
 \section{IoT System Architecture}
@@ -326,10 +335,81 @@ throughput; they are \emph{not} metered specific energy.
 No IoT-versus-non-IoT savings or significance test is claimed.
 
 % --------------------------------------------------------------------------
-\section{Results II: Prospective Factory IoT Validation}
+\section{Results II: Simulation and Bench Study}
+\label{sec:sim}
+This section contains \textbf{no factory data}. It combines a simulation of the soft sensor under stated assumptions,
+a measurement of the server software on a workstation, and a verification of the alarm logic on the simulator. All
+numbers are reproduced by \texttt{tools/sim\_study.py} in the open repository.
+
+\subsection{Soft-sensor sample efficiency and geometry transfer (simulation)}
+\emph{Set-up.} Ground-truth residual moisture is the DoE model~\eqref{eq:prior} plus a plant offset (0 or 1.5\,pp)
+and \emph{assumed} operating effects of $+0.40$\,pp per rad/s of $\omega$, $+0.02$\,pp per kg/h of $q$,
+$-0.08$\,pp/$^\circ$C and $+0.002$\,pp/NTU, with $\omega\sim\mathcal N(16,1)$\,rad/s, $q\sim\mathcal N(425,25)$\,kg/h,
+$T\sim\mathcal N(55,3)\,^\circ$C and $\tau\sim\mathcal U(200,800)$\,NTU. A \emph{nonlinear} variant adds a quadratic
+drum-speed term, a feed--temperature interaction and a turbidity threshold effect that none of the models contains.
+Laboratory labels carry Gaussian noise with $\sigma_{\rm lab}=0.664$\,pp (Table~\ref{tab:doe}). Each configuration is
+repeated 200 times; RMSE is computed against the noise-free truth on 300 test points.
+
+\begin{table}[t]\centering\small
+\caption{Simulated soft-sensor RMSE (pp), mean over 200 runs; nonlinear truth, plant offset 1.5\,pp.
+Transfer: trained on 20 samples at 2/250/3\,mm, tested on a new geometry}
+\label{tab:sim}
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{lcccccc}\toprule
+ & \multicolumn{4}{c}{Samples $n$, same geometry} & \multicolumn{2}{c}{Transfer}\\\cmidrule(lr){2-5}\cmidrule(lr){6-7}
+Model & 0 & 1 & 5 & 20 & A & B\\\midrule
+DoE prior only & 2.09 & 2.09 & 2.09 & 2.09 & 2.09 & 2.09\\
+\textbf{Hybrid (proposed)} & \textbf{2.09} & \textbf{1.23} & \textbf{0.82} & \textbf{0.50} & \textbf{0.50} & \textbf{0.50}\\
+Hybrid, unstaged & 2.09 & 2.09 & 0.85 & 0.50 & 0.50 & 0.50\\
+Ridge, no prior & -- & 1.26 & 0.99 & 0.47 & 1.05 & 2.11\\
+Random forest, no prior & -- & 1.26 & 0.91 & 0.64 & 1.13 & 2.15\\\bottomrule
+\end{tabular}
+
+\vspace{2pt}
+\parbox{\columnwidth}{\scriptsize A: $D$ 250$\to$300\,mm. B: $d/D/h$ = 2/250/3 $\to$ 3/200/4\,mm.}
+\end{table}
+
+\begin{figure}[t]\centering
+\includegraphics[width=\columnwidth]{figs/sim_learning_curve.pdf}
+\caption{Simulated learning curves (mean $\pm$ SD of RMSE over 200 runs, plant offset 1.5\,pp) for (a) the linear and
+(b) the nonlinear ground truth. Simulation under assumed operating effects, not factory data.}
+\label{fig:sim}
+\end{figure}
+
+\emph{Findings.} (i) Purely data-driven models cannot predict before the first label, whereas the hybrid starts from the
+DoE prior. (ii) Shrinking the plant offset towards the prior gave the lowest \emph{worst-case} error for $1\le n\le5$
+over the two offsets: at $n=1$, 1.01/1.13\,pp (offset 0/1.5\,pp) versus 0.79/1.86\,pp for the unstaged rule and
+1.20/1.19\,pp without shrinkage; it costs accuracy when the prior is already correct. (iii) For $n=5$ it had the lowest
+error in all four scenarios (0.71--0.82\,pp versus 0.85--0.99\,pp for ridge). (iv) For $n\ge20$ at fixed geometry,
+ordinary ridge regression was marginally better (e.g.\ 0.36 vs.\ 0.42\,pp, linear truth), as expected from the
+equivalence noted in Sec.~\ref{sec:hybrid}; the random forest was worst. (v) After a geometry change the hybrid
+kept 0.42--0.50\,pp, whereas the data-driven models rose to 1.0--2.2\,pp, because they cannot represent geometry they
+were never trained on (Table~\ref{tab:sim}, Fig.~\ref{fig:sim}). These conclusions are conditional on the assumed
+effect sizes and must be confirmed with factory data (Sec.~\ref{sec:iot}).
+
+\subsection{Server software benchmark (measurement on a workstation)}
+On an Intel Core i9-14900HX (Windows~11, Python~3.9), one firmware-format message is 638\,bytes
+(27.6\,MB/day per node at 2\,s). Server-side processing (validation, soft-sensor prediction, alarm rules, SQLite insert)
+took a median of 2.0\,ms (p95 2.4\,ms, $n=5000$). The HTTP round trip over the loopback interface, with a new TCP
+connection per message as in the firmware, had a median of 15.7\,ms (p95 32.0\,ms, $n=2000$); a single sequential
+client achieved 62 messages/s, i.e.\ about 120 nodes at a 2-s period. These figures characterise the software only and
+exclude Wi-Fi, which is evaluated in Sec.~\ref{sec:iot}.
+
+\subsection{Alarm-logic verification (simulator)}
+Faults were injected 20 times each into the simulator after a 1-h warm-up. All 60 were detected: heater failure in bowl~3
+after a median of 92\,s (max 110\,s), a level leak in bowl~2 after 200\,s (max 205\,s), and a drum-speed drop in the first
+message after onset ($\le$1\,s at the 2-s period). Both delays are set by the simulated thermal and level dynamics and by the thresholds, not measured
+plant behaviour. During 8\,h (14\,401 messages) of fault-free operation no fault alarm occurred, but the
+\emph{dirty-liquor advisory} was active in 64\,\% of messages because its 800\,NTU threshold lies below the simulated
+liquor-change policy (850\,NTU). This advisory threshold must therefore be set from the plant's actual liquor-change
+practice during commissioning.
+
+% --------------------------------------------------------------------------
+\section{Results III: Prospective Factory IoT Validation}
 \label{sec:iot}
 This section is reserved for measurements collected with the deployed IoT system at the factory. No value from
-Sec.~\ref{sec:baseline} is reused here, and simulator output is excluded. \textbf{Status: not yet performed}; the
+Sec.~\ref{sec:baseline} or Sec.~\ref{sec:sim} is reused here, and simulator output is excluded. \textbf{Status: not yet performed}; the
 subsections define what will be reported.
 \TODO{Replace each subsection with measured results (n, mean $\pm$ SD, test days) once the field campaign is complete.}
 
@@ -379,7 +459,10 @@ wool, sensor fouling in hot alkaline liquor, Wi-Fi attenuation and interference
 in wet industrial halls, and the absence of multi-site deployment evidence.
 Access tokens, TLS, role-based access and backups should be verified on the
 actual factory network rather than treated as demonstrated security controls.
-Hence the present work is a system design and retrospective baseline study,
+The simulation in Sec.~\ref{sec:sim} depends on assumed operating-effect sizes; it
+shows where the DoE prior can help (cold start, few labels, geometry changes) and where it
+cannot (many labels at a fixed geometry), but not how large these effects are in a plant.
+Hence the present work is a system design, retrospective baseline and simulation study,
 not evidence of proven IoT effectiveness.
 
 \section{Conclusion}
@@ -389,7 +472,10 @@ moisture observations confirmed an adequate four-term geometry model; the
 in-sample RMSE was 0.588 percentage points across individual readings.
 Historical records also suggest lower residual moisture and reduced water
 volume per shift for the improved \emph{mechanical} process, subject to data
-comparability and unit limitations. No field measurements yet establish the
+comparability and unit limitations. A simulation with a staged, offset-shrinking
+calibration showed the benefit of the DoE prior to be confined to cold start, few
+labels and changes of geometry; the server software and alarm rules were verified
+on a workstation and simulator. No field measurements yet establish the
 accuracy, reliability, latency, alarm performance or per-kilogram resource
 benefits of the proposed IoT system. Independent, day-separated factory
 validation with calibrated sensors and metered consumption is required before
