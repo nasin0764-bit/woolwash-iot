@@ -48,3 +48,19 @@ def test_per_machine_limits_api(client, payload):
 def test_geometry_put_requires_token(client):
     assert client.put("/api/geometry/WW-G", json={"d_drum": 300}).status_code == 401
     assert client.put("/api/geometry/WW-G", json={"d_drum": 300}, headers=H).json()["d_drum"] == 300.0
+
+
+def test_limits_type_coercion_and_validation(client):
+    r = client.put("/api/limits/WW-COERCE", headers=H,
+                   json={"temp_min": "50, 50, 45, 40, 35", "turbidity_debounce_n": "10", "level_min_cm": "35.5"})
+    assert r.status_code == 200
+    j = r.json()
+    assert j["temp_min"] == [50.0, 50.0, 45.0, 40.0, 35.0] and j["turbidity_debounce_n"] == 10
+    assert j["level_min_cm"] == 35.5
+    assert client.put("/api/limits/WW-COERCE", headers=H, json={"temp_min": "50,50"}).status_code == 400
+    assert client.put("/api/limits/WW-COERCE", headers=H, json={"level_min_cm": "abc"}).status_code == 400
+    assert client.put("/api/limits/WW-COERCE", headers=H,
+                      json={"turbidity_max_ntu": 600, "turbidity_off_ntu": 700}).status_code == 400
+    # a single value that conflicts with the stored/default counterpart is rejected too
+    assert client.put("/api/limits/WW-COERCE2", headers=H, json={"turbidity_max_ntu": 600}).status_code == 400
+    assert client.put("/api/limits/WW-COERCE2", headers=H, json={"turbidity_debounce_n": 0}).status_code == 400

@@ -11,3 +11,4 @@ date | task | question | decision | reason
 2026-11-04 | 3 | Commissioned advisory threshold for the S3 demonstration | ON 820 / OFF 700 NTU, just below the simulated 850 NTU liquor-change point | Shows an advance warning before each change without being circular (ON = 850 would trivially never fire)
 2026-11-04 | 6 | Moisture basis on the lab form | Wet basis, W = (wet - dry)/wet, stated on the form | Residual moisture after squeezing (55-60 %) in the dissertation is a wet-basis value; regain (dry basis) would give >100 %
 2026-11-04 | 7 | Public GitHub release was blocked | Hand over to the user with the exact command; mark as [HUMAN] | Publishing a release is an outward-facing action the user must take
+2026-11-05 | 8 | Where the app keeps the device token | sessionStorage (cleared when the tab closes), never localStorage | Token protects machine settings; shared factory PCs/phones should not keep it

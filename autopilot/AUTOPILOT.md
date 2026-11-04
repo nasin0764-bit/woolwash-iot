@@ -45,6 +45,12 @@ that is not marked [HUMAN]**, finishes it, ticks it, and commits and pushes. The
 - [x] 6. **Printable data-collection forms** (PDF in `docs/forms/`): shift log (meter readings, wool mass, wool type),
       lab moisture sample log (wet/dry mass, 3 replicates), sensor calibration sheet, fault-test log. In English and
       Russian.
+- [x] 8. **App commissioning tab:** EN/RU tab in the web/mobile app to view and set per-machine alarm limits
+      (`/api/limits`) and squeeze geometry (`/api/geometry`) with the device token; verify against a running server.
+- [ ] 9. **Cover letter consistency:** contributions match the current paper (Sections V/VI/VII), 1 page if possible.
+- [ ] 10. **Supervisor copy of the corrections:** Word version of `Dissertation_Corrections.md` (tables kept).
+- [ ] 11. **Firmware boot test in an emulator** (Espressif QEMU): check that the image boots and reaches setup;
+      record honestly what can and cannot be tested without hardware (no Wi-Fi in QEMU).
 - [ ] [HUMAN] 7. **Repository release** (blocked for the agent: creating a public release is the user's decision). Command: `gh release create v1.1.0 firmware/bin/woolwash_esp32_1.1.0.merged.bin firmware/bin/woolwash_esp32_1.1.0.bin firmware/bin/SHA256SUMS.txt --title "WoolWash-IoT 1.1.0 (firmware pre-release)" --notes-file firmware/RELEASE_NOTES_1.1.0.md --prerelease`
 - [ ] [HUMAN] Factory measurements (docs/HARDWARE.md §5): needed for Section VII.
 - [ ] [HUMAN] Written approval of the full manuscript by all five authors; M. Anorkulov confirms his contribution.
@@ -63,5 +69,4 @@ that is not marked [HUMAN]**, finishes it, ticks it, and commits and pushes. The
 5 | 2026-11-04 | docs/PLAN_RU.md and docs/PLAN_UZ.md (Latin script): goal, status, 8 steps, ESP32 flashing and portal setup, commissioning checklist. | see git log
 6 | 2026-11-04 | docs/forms/01-04 PDFs (A4 landscape, English + Russian): shift log, lab moisture log (wet basis, 3 replicates), sensor calibration sheet, supervised fault-test log; each maps to a template sheet or the analyze_field --faults CSV. Generator: tools/make_forms.py (reportlab 4.2.5, Arial/DejaVu). | see git log
 7 | 2026-11-04 | Release creation denied by the safety classifier (public surface). Release notes saved to firmware/RELEASE_NOTES_1.1.0.md; task moved to [HUMAN] with the exact command. | see git log
-
-ALL AUTONOMOUS TASKS DONE
+8 | 2026-11-05 | App tab Commissioning / Пусконаладка: view and save per-machine geometry and alarm limits with the device token (sessionStorage only). Server PUT /api/limits now coerces types and validates the merged ON/OFF and debounce values. Verified in headless Edge against a temp server: prefill, wrong token -> error, right token -> saved on server, RU labels, no JS errors; phone-width layout checked. 22 tests pass. | see git log

@@ -54,7 +54,8 @@ broker host in the setup page.
 | POST | /api/telemetry | device data (header `X-Token`) |
 | GET | /api/machines, /api/latest/{id}, /api/history/{id}?minutes= | data |
 | POST | /api/lab | `{machine, moisture_pct, note}` – oven-dry sample, refits soft sensor |
-| GET/PUT | /api/model/{id}, /api/geometry/{id} | soft-sensor info, machine geometry |
+| GET/PUT | /api/model/{id}, /api/geometry/{id} | soft-sensor info, machine geometry (PUT needs `X-Token`) |
+| GET/PUT | /api/limits/{id} | per-machine alarm limits (PUT needs `X-Token`); also in the app tab *Commissioning* |
 | GET | /api/export/{id}.csv?hours= | CSV for analysis / paper |
 | GET | /api/validation/{id}/packets.csv, /calibration.csv | rows for the IEEE validation template |
 | WS | /ws | live stream |

@@ -10,7 +10,13 @@ const I18N = {
     temp_low:"Temperature low",temp_high:"Temperature high",level_low:"Liquor level low",
     liquor_dirty:"Liquor dirty – change recommended",omega_dev:"Drum speed out of range",moisture_high:"Residual moisture above 60 %",
     c_moist:"Residual moisture, % (predicted)",c_temp:"Bowl temperature, °C",c_turb:"Liquor turbidity, NTU",c_power:"Power, kW",
-    saved:"Saved"},
+    saved:"Saved",setup:"Commissioning",token:"Device token",geom:"Squeezing device geometry",limits:"Alarm limits",
+    setuphelp:"Machine-specific settings, set once at commissioning. Saving requires the device token (WW_TOKEN of the server).",
+    g_hole:"Mesh hole diameter, mm",g_drum:"Squeeze drum diameter, mm",g_gap:"Drum–mesh gap, mm",g_rake:"Rake length, mm",
+    l_tmin:"Min. temperature, bowls 1–5, °C",l_tmax:"Max. temperature, bowls 1–5, °C",l_level:"Min. liquor level, cm",
+    l_ton:"Dirty liquor ON above, NTU",l_toff:"Dirty liquor OFF below, NTU",l_deb:"Debounce, messages (×2 s)",
+    l_om:"Nominal drum ω, rad/s",l_omt:"ω tolerance, rad/s",l_moist:"Moisture alarm above, %",
+    badtoken:"Wrong token",needtoken:"Enter the device token first",err:"Error"},
   ru: {title:"Монитор шерстомойки",overview:"Обзор",charts:"Графики",lab:"Лаборатория",simdata:"ДАННЫЕ СИМУЛЯЦИИ",
     moisture:"Остаточная влажность (прогноз)",power:"Мощность",omega:"ω отжимного барабана",feed:"Подача",
     kwhkg:"Удельная энергия",lkg:"Удельный расход воды",bowls:"Моечные барки",alerts:"Сигналы",updated:"Обновлено",
@@ -21,7 +27,13 @@ const I18N = {
     temp_low:"Низкая температура",temp_high:"Высокая температура",level_low:"Низкий уровень раствора",
     liquor_dirty:"Раствор загрязнён – требуется замена",omega_dev:"Скорость барабана вне нормы",moisture_high:"Остаточная влажность выше 60 %",
     c_moist:"Остаточная влажность, % (прогноз)",c_temp:"Температура в барках, °C",c_turb:"Мутность раствора, NTU",c_power:"Мощность, кВт",
-    saved:"Сохранено"}
+    saved:"Сохранено",setup:"Пусконаладка",token:"Токен устройства",geom:"Геометрия отжимного устройства",limits:"Пороги сигнализации",
+    setuphelp:"Настройки конкретной машины, задаются один раз при пусконаладке. Для сохранения нужен токен устройства (WW_TOKEN сервера).",
+    g_hole:"Диаметр отверстий сетки, мм",g_drum:"Диаметр отжимного барабана, мм",g_gap:"Зазор барабан–сетка, мм",g_rake:"Длина граблин, мм",
+    l_tmin:"Мин. температура, барки 1–5, °C",l_tmax:"Макс. температура, барки 1–5, °C",l_level:"Мин. уровень раствора, см",
+    l_ton:"Загрязнение: включить выше, NTU",l_toff:"Загрязнение: выключить ниже, NTU",l_deb:"Задержка, сообщений (×2 с)",
+    l_om:"Номинальная ω барабана, рад/с",l_omt:"Допуск ω, рад/с",l_moist:"Сигнал влажности выше, %",
+    badtoken:"Неверный токен",needtoken:"Сначала введите токен устройства",err:"Ошибка"}
 };
 let lang = (()=>{try{return localStorage.getItem("ww-lang")||"en"}catch(e){return "en"}})();
 const t = k => (I18N[lang]||I18N.en)[k] || k;
@@ -43,7 +55,39 @@ document.querySelectorAll(".tab").forEach(b => b.onclick = () => {
   b.classList.add("active"); $("#"+b.dataset.tab).classList.add("active");
   if (b.dataset.tab === "charts") loadHistory();
   if (b.dataset.tab === "lab") loadLab();
+  if (b.dataset.tab === "setup") loadSetup();
 });
+
+// ---- commissioning tab: per-machine geometry and alarm limits (token-protected PUT)
+try { $("#tok").value = sessionStorage.getItem("ww-token") || ""; } catch(e) {}
+$("#tok").onchange = () => { try { sessionStorage.setItem("ww-token", $("#tok").value); } catch(e) {} };
+
+function fillForm(form, obj){
+  [...form.elements].forEach(el => { if (el.name && el.name in obj) el.value = Array.isArray(obj[el.name]) ? obj[el.name].join(", ") : obj[el.name]; });
+}
+async function loadSetup(){
+  if (!machine) return;
+  try {
+    const [lim, mod] = await Promise.all([api(`/api/limits/${machine}`), api(`/api/model/${machine}`)]);
+    fillForm($("#limform"), lim); fillForm($("#geomform"), mod.geometry || {});
+  } catch(e) {}
+}
+async function saveForm(form, path, ev){
+  ev.preventDefault();
+  const msg = form.querySelector(".msg"); msg.className = "msg"; msg.textContent = "";
+  const token = $("#tok").value.trim();
+  if (!token) { msg.className = "msg err"; msg.textContent = t("needtoken"); return; }
+  const body = {};
+  [...form.elements].forEach(el => { if (el.name && el.value !== "") body[el.name] = el.type === "number" ? Number(el.value) : el.value; });
+  try {
+    const r = await fetch(`${path}/${machine}`, {method:"PUT", headers:{"Content-Type":"application/json","X-Token":token}, body:JSON.stringify(body)});
+    if (r.status === 401) { msg.className = "msg err"; msg.textContent = t("badtoken"); return; }
+    if (!r.ok) { const d = await r.json().catch(()=>({})); msg.className = "msg err"; msg.textContent = `${t("err")}: ${d.detail || r.status}`; return; }
+    fillForm(form, await r.json()); msg.className = "msg ok"; msg.textContent = t("saved");
+  } catch(e) { msg.className = "msg err"; msg.textContent = `${t("err")}: ${e.message}`; }
+}
+$("#limform").onsubmit = ev => saveForm($("#limform"), "/api/limits", ev);
+$("#geomform").onsubmit = ev => saveForm($("#geomform"), "/api/geometry", ev);
 
 const fmt = (v,d=1) => v==null||isNaN(v) ? "–" : Number(v).toFixed(d);
 

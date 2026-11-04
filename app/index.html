@@ -26,6 +26,7 @@
   <button class="tab active" data-tab="overview" data-i18n="overview">Overview</button>
   <button class="tab" data-tab="charts" data-i18n="charts">Trends</button>
   <button class="tab" data-tab="lab" data-i18n="lab">Lab &amp; model</button>
+  <button class="tab" data-tab="setup" data-i18n="setup">Commissioning</button>
 </nav>
 
 <main>
@@ -57,6 +58,32 @@
     <div class="chart"><canvas id="c-temp"></canvas></div>
     <div class="chart"><canvas id="c-turb"></canvas></div>
     <div class="chart"><canvas id="c-power"></canvas></div>
+  </section>
+
+  <section id="setup" class="pane">
+    <p class="muted" data-i18n="setuphelp">Machine-specific settings, set once at commissioning. Saving requires the device token (WW_TOKEN of the server).</p>
+    <div class="row"><label data-i18n="token">Device token</label><input id="tok" type="password" autocomplete="off"></div>
+    <h2 data-i18n="geom">Squeezing device geometry</h2>
+    <form id="geomform" class="form2">
+      <label><span data-i18n="g_hole">Mesh hole diameter, mm</span><input name="d_hole" type="number" step="0.1"></label>
+      <label><span data-i18n="g_drum">Squeeze drum diameter, mm</span><input name="d_drum" type="number" step="1"></label>
+      <label><span data-i18n="g_gap">Drum–mesh gap, mm</span><input name="gap" type="number" step="0.1"></label>
+      <label><span data-i18n="g_rake">Rake length, mm</span><input name="rake_len" type="number" step="1"></label>
+      <button class="btn" type="submit" data-i18n="save">Save</button><span class="msg"></span>
+    </form>
+    <h2 data-i18n="limits">Alarm limits</h2>
+    <form id="limform" class="form2">
+      <label><span data-i18n="l_tmin">Min. temperature, bowls 1–5, °C</span><input name="temp_min" type="text"></label>
+      <label><span data-i18n="l_tmax">Max. temperature, bowls 1–5, °C</span><input name="temp_max" type="text"></label>
+      <label><span data-i18n="l_level">Min. liquor level, cm</span><input name="level_min_cm" type="number" step="0.1"></label>
+      <label><span data-i18n="l_ton">Dirty liquor ON above, NTU</span><input name="turbidity_max_ntu" type="number" step="1"></label>
+      <label><span data-i18n="l_toff">Dirty liquor OFF below, NTU</span><input name="turbidity_off_ntu" type="number" step="1"></label>
+      <label><span data-i18n="l_deb">Debounce, messages (×2 s)</span><input name="turbidity_debounce_n" type="number" step="1" min="1"></label>
+      <label><span data-i18n="l_om">Nominal drum ω, rad/s</span><input name="omega_nom" type="number" step="0.1"></label>
+      <label><span data-i18n="l_omt">ω tolerance, rad/s</span><input name="omega_tol" type="number" step="0.1"></label>
+      <label><span data-i18n="l_moist">Moisture alarm above, %</span><input name="moisture_max" type="number" step="0.1"></label>
+      <button class="btn" type="submit" data-i18n="save">Save</button><span class="msg"></span>
+    </form>
   </section>
 
   <section id="lab" class="pane">

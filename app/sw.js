@@ -1,5 +1,5 @@
 // App-shell cache; API calls always go to the network.
-const CACHE = "ww-v1";
+const CACHE = "ww-v2";
 const SHELL = ["/", "/index.html", "/style.css", "/app.js", "/manifest.json", "/icon.svg"];
 self.addEventListener("install", e => e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL))));
 self.addEventListener("activate", e => e.waitUntil(caches.keys().then(ks =>

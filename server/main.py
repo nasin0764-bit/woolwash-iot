@@ -359,8 +359,28 @@ def set_limits(machine: str, new: dict, x_token: str = Header(default="")):
     unknown = [k for k in new if k not in LIMITS]
     if unknown:
         raise HTTPException(400, f"unknown limit(s): {unknown}")
+    try:  # coerce to the type of the default value (lists of 5 numbers, int counters, floats)
+        clean = {}
+        for k, v in new.items():
+            d = LIMITS[k]
+            if isinstance(d, list):
+                vals = [float(x) for x in (v.split(",") if isinstance(v, str) else v)]
+                if len(vals) != len(d):
+                    raise ValueError(f"{k} needs {len(d)} values")
+                clean[k] = vals
+            elif isinstance(d, int) and not isinstance(d, bool):
+                clean[k] = int(v)
+            else:
+                clean[k] = float(v)
+    except (TypeError, ValueError) as e:
+        raise HTTPException(400, f"invalid value: {e}")
     r = q("SELECT limits FROM machine_limits WHERE id=?", (machine,), one=True)
-    cur = {**(json.loads(r[0]) if r else {}), **new}
+    cur = {**(json.loads(r[0]) if r else {}), **clean}
+    merged = {**LIMITS, **cur}
+    if merged["turbidity_off_ntu"] > merged["turbidity_max_ntu"]:
+        raise HTTPException(400, "turbidity_off_ntu must not exceed turbidity_max_ntu")
+    if merged["turbidity_debounce_n"] < 1:
+        raise HTTPException(400, "turbidity_debounce_n must be >= 1")
     q("INSERT OR REPLACE INTO machine_limits VALUES(?,?)", (machine, json.dumps(cur)))
     _limit_cache.pop(machine, None)
     for key in [k for k in _adv if k[0] == machine]:
