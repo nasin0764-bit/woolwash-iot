@@ -140,16 +140,18 @@ each time a sample is added; with no samples it reduces to the DoE prior.
 \section{IoT System Architecture}
 \begin{figure}[t]
 \centering
-\begin{tikzpicture}[font=\scriptsize, node distance=4mm and 6mm,
-  b/.style={draw,rounded corners,align=center,minimum height=7mm,fill=blue!5}]
-\node[b] (s) {Sensors\\DS18B20, JSN-SR04T,\\turbidity, Hall, flow,\\PZEM-004T};
+\resizebox{\columnwidth}{!}{%
+\begin{tikzpicture}[font=\scriptsize, node distance=5mm and 11mm,
+  b/.style={draw,rounded corners,align=center,minimum height=9mm,text width=21mm,fill=blue!5}]
+\node[b] (s) {Sensors\\DS18B20, JSN-SR04T,\\turbidity, Hall,\\flow, PZEM-004T};
 \node[b,right=of s] (e) {ESP32 edge node\\sampling, scaling,\\JSON, NTP time};
 \node[b,right=of e] (srv) {Server\\ingest, SQLite,\\soft sensor, alarms,\\KPIs, CSV};
-\node[b,below=of srv] (app) {Web + mobile app\\(PWA, EN/RU)\\live via WebSocket};
-\node[b,below=of e] (lab) {Lab samples\\oven-dry moisture};
-\draw[-{Latex}] (s)--(e); \draw[-{Latex}] (e)--node[above]{Wi-Fi}node[below]{HTTP/MQTT}(srv);
-\draw[-{Latex}] (srv)--(app); \draw[-{Latex}] (lab)--(app);
-\end{tikzpicture}
+\node[b,below=of srv] (app) {Web + mobile app\\(PWA, EN/RU),\\WebSocket};
+\node[b,below=of e] (lab) {Lab samples\\(oven-dry\\moisture)};
+\draw[-{Latex}] (s)--(e);
+\draw[-{Latex}] (e)--node[above,font=\tiny]{Wi-Fi}node[below,font=\tiny]{HTTP/MQTT}(srv);
+\draw[{Latex}-{Latex}] (srv)--(app); \draw[-{Latex}] (lab)--(app);
+\end{tikzpicture}}
 \caption{Architecture of the proposed IoT framework.}
 \label{fig:arch}
 \end{figure}
@@ -165,6 +167,72 @@ train/test split by day, network environment (AP distance, RSSI).}
 
 % --------------------------------------------------------------------------
 \section{Results}
+\subsection{Retrospective mechanical-process baseline}
+\label{sec:baseline}
+The values in this subsection are transcribed from the historical experimental program \cite{tuguzbayeva2024}
+(Tables 3.7, 3.9, 3.13 and Sec.~4.1 therein) and reanalysed; they are \emph{not} measurements of the IoT system and
+serve only as the physical-process reference and as the prior of the soft sensor.
+
+\emph{Factorial experiment.} The $2^3$ design (Table~\ref{tab:doe}) comprised three residual-moisture measurements per
+treatment, giving 24 observations over eight geometry combinations. Unweighted least squares on the eight run means
+gives the main-effects model~\eqref{eq:prior} ($b_0=57.3125$, $b_1=0.8125$, $b_2=-0.9458$, $b_3=0.2958$); the
+interaction terms were not significant ($|t|\le1.08<2.12$). The within-run variances satisfy Cochran's homogeneity
+criterion ($G=0.290<0.516$), and the model passes the lack-of-fit test ($F=0.714<F_{0.05;4,16}=3.01$). These tests
+indicate no lack of fit at the eight measured corners but do not establish predictive accuracy outside the factor domain.
+The selected 2\,mm/250\,mm/3\,mm geometry is an engineering compromise---narrower gaps caused wool jamming and damage,
+wider gaps reduced squeezing---and corresponds to a \emph{predicted} residual moisture of 57.31\,\%; no separate
+center-point run was performed, and the minimum fitted corner (run~3, 55.26\,\%) is lower, so the setting is not the
+unconstrained statistical optimum.
+
+\begin{table}[t]\centering\small
+\caption{Historical $2^3$ factorial data for residual moisture $W$ (\%) \cite{tuguzbayeva2024}.
+Levels $-1/0/+1$: $d=1/2/3$\,mm, $D=200/250/300$\,mm, $h=2/3/4$\,mm}
+\label{tab:doe}
+\setlength{\tabcolsep}{3.5pt}
+\begin{tabular}{ccccccc}\toprule
+Run & $X_1$ & $X_2$ & $X_3$ & Replicates & Mean $\pm$ SD & $\hat W$\\\midrule
+1 & $-$ & $-$ & $-$ & 57.0, 57.5, 58.3 & 57.60 $\pm$ 0.66 & 57.15\\
+2 & $+$ & $-$ & $-$ & 58.3, 58.5, 58.7 & 58.50 $\pm$ 0.20 & 58.78\\
+3 & $-$ & $+$ & $-$ & 54.5, 55.2, 55.4 & 55.03 $\pm$ 0.47 & 55.26\\
+4 & $+$ & $+$ & $-$ & 57.2, 56.2, 57.4 & 56.93 $\pm$ 0.64 & 56.88\\
+5 & $-$ & $-$ & $+$ & 58.5, 57.2, 56.8 & 57.50 $\pm$ 0.89 & 57.74\\
+6 & $+$ & $-$ & $+$ & 59.8, 59.5, 59.0 & 59.43 $\pm$ 0.40 & 59.37\\
+7 & $-$ & $+$ & $+$ & 55.1, 56.3, 56.2 & 55.87 $\pm$ 0.67 & 55.85\\
+8 & $+$ & $+$ & $+$ & 57.1, 58.8, 57.0 & 57.63 $\pm$ 1.01 & 57.48\\\bottomrule
+\end{tabular}\end{table}
+
+\emph{Historical industrial observations.} The improved design was tested at two enterprises in Uzbekistan
+(Qashqadaryo and Surxondaryo regions) \cite{tuguzbayeva2024}. Table~\ref{tab:hist} summarises the reported values and
+midpoint-based normalisations. Post-squeezing moisture decreased by about 10 percentage points and water use per shift by
+76.5\,\%, but the improved line also had lower nominal throughput and lower clean-wool yield; the latter may reflect
+better impurity removal or fibre loss and cannot be resolved from aggregate values. Installed power is a nameplate value,
+not metered energy. The records lack matched batches, per-site variability and uncertainty, and are therefore
+descriptive evidence only---which is precisely the measurement gap the proposed IoT system addresses.
+
+\begin{table}[t]\centering\small
+\caption{Historical comparison reported in \cite{tuguzbayeva2024} (not IoT data)}
+\label{tab:hist}
+\setlength{\tabcolsep}{2.5pt}
+\begin{tabular}{lccc}\toprule
+Indicator & Existing & Improved & Change\\\midrule
+Residual moisture (\%) & 65--70 & 55--60 & $-10$\,pp$^a$\\
+Water (m$^3$/shift)$^b$ & 59.6 & 14.0 & $-76.5$\,\%\\
+Water reused (\%) & 70 & 80 & $+10$\,pp\\
+Throughput (kg/h)$^c$ & 700--800 & 400--450 & $-43.3$\,\%$^a$\\
+Clean-wool yield (\%) & 64--66 & 60--62 & $-4$\,pp$^a$\\
+Installed power (kW) & 13.0 & 4.2 & $-67.7$\,\%\\
+Water/throughput$^d$ & -- & -- & $-58.5$\,\%\\
+Power/throughput$^d$ & -- & -- & $-43.0$\,\%\\
+Scouring eff. (\%)$^e$ & n/r & 94.5; 92--95 & --\\\bottomrule
+\end{tabular}
+
+\vspace{2pt}
+\parbox{\columnwidth}{\scriptsize $^a$Range midpoints. $^b$Units as in Table 3.13 of \cite{tuguzbayeva2024}; another
+table of the source uses litres per 450\,kg. $^c$Printed as ``kg/s'' in parts of the source; kg/h is the internally
+consistent reading. $^d$Equal shift length and midpoint throughput assumed; nameplate power, not metered specific
+consumption. $^e$Spring; autumn wool. n/r: not reported.}
+\end{table}
+
 \subsection{Soft-sensor accuracy}
 \begin{table}[t]\centering\caption{Residual-moisture prediction on held-out field samples}
 \begin{tabular}{lccc}\toprule
@@ -186,6 +254,10 @@ Random forest (no prior) & \TODO{} & \TODO{} & \TODO{}\\
 
 % --------------------------------------------------------------------------
 \section{Discussion and Limitations}
+\emph{Validation boundary.} The historical data of Sec.~\ref{sec:baseline} provide a physical-process reference but do
+not evaluate the sensing, networking or analytics of the proposed system. Only the prospective measurements reported in
+the remaining subsections of Sec.~V---sensor calibration errors, delivery ratio and latency, and baseline-versus-IoT
+operating outcomes under matched conditions---support claims about the IoT architecture.
 \TODO{Generalisation across wool types, sensor fouling (turbidity probes in alkaline liquor), Wi-Fi in wet halls,
 scaling to multiple plants, security (device token, TLS).}
 
