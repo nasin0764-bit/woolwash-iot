@@ -66,7 +66,9 @@ Industrial Internet of Things, soft sensor, wool scouring, edge computing, resou
 all downstream textile products. Scouring removes grease, suint and mineral dirt in a sequence of bowls filled with hot
 alkaline liquor; between bowls, squeezing devices remove the dirty liquor from the wool. Insufficient squeezing carries
 dirt into the next bowl, shortens liquor life and increases water and detergent consumption, and every percentage point
-of residual moisture must later be evaporated in the dryer.
+of residual moisture must later be evaporated in the dryer. Scouring is a major contributor to the water footprint and
+life-cycle burden of wool products \cite{li2022water,bianco2023life}, and its highly polluted effluent requires costly
+treatment \cite{shi2023inorganic,sinisaari2025performance}.
 
 In regions such as Uzbekistan, where wool comes largely from Karakul sheep and is processed in small, decentralised
 plants, large centralised scouring lines are uneconomic. A compact, resource-saving machine with an improved squeezing
@@ -76,10 +78,24 @@ device (ribbed squeeze drum, guide slat drum and wrapped mesh surface) was devel
 cannot see liquor temperature or dirtiness, moisture is measured only by occasional oven-dry samples, and resource
 consumption is not accounted per kilogram of wool.
 
-Industrial IoT \cite{xu2014iot} and soft sensing \cite{kadlec2009soft} offer a remedy, but published IoT work in textiles
-focuses on spinning, weaving and dyeing; \TODO{add 6--10 recent IoT/textile/soft-sensor references, 2020--2025, incl.
-IEEE IoT-J papers} --- to our knowledge, no work instruments the scouring/squeezing stage or exploits DoE models of the
-machine as a prior for an IoT soft sensor.
+\textbf{Related work.} Industrial IoT increasingly moves analytics to the edge of the network
+\cite{qiu2020edge,deng2020edge}, and IoT/big-data frameworks have been demonstrated for health-state monitoring,
+fault detection and cloud--edge--device collaborative monitoring of manufacturing systems
+\cite{yu2022integrated,yu2023edge,zhang2026trinity}. Low-cost nodes make such monitoring affordable
+\cite{gonzalez2022hypnos,kalamaras2025low}, and digital retrofitting is the practical route for legacy machines that
+cannot be replaced \cite{alqoud2022industry}. Digital twins built from sensor data extend this to model-based
+operation \cite{leng2021digital,friederich2022framework,perno2022implementation}. In the textile sector, Industry~4.0
+and AI work concentrates on spinning, inspection and garment production
+\cite{han2024prediction,xu2025zero,safavi2025clothing,ingle2025review}; energy benchmarking of wet processing in SMEs
+has been proposed but relies on manual audits \cite{kasturi2022methodological}.
+
+Soft sensors estimate hard-to-measure quality variables from routine measurements \cite{sun2021survey}. Purely
+data-driven models need many labelled samples, which are expensive when the reference is a laboratory analysis
+\cite{zhang2021novel}; gray-box and physics-informed models reduce this need and improve explainability
+\cite{ahmad2020gray,bikmukhametov2020combining}, while adaptive schemes keep the model calibrated online
+\cite{hasnen2023semi}. In IoT settings, self-improving soft sensors have been used to reduce costly measurements
+\cite{lee2026cost}. To our knowledge, however, no work instruments the wool scouring/squeezing stage, and none uses
+a design-of-experiments model of the machine as the prior of an IoT soft sensor.
 
 \textbf{Contributions.}
 \begin{enumerate}
@@ -89,7 +105,8 @@ transport, server-side analytics and an installable bilingual (EN/RU) web/mobile
 (geometry prior) with an online, regularised correction for operating conditions, calibrated from sparse laboratory samples.
 \item Real-time per-kilogram resource indicators (kWh/kg, L/kg) and rule-based fault alarms (heater failure, low level,
 dirty liquor, drum speed deviation).
-\item A field deployment on an industrial machine with \TODO{N} shifts of data, an open dataset and code \TODO{repo URL}.
+\item A field deployment on an industrial machine with \TODO{N} shifts of data, with open code at
+\url{https://github.com/nasin0764-bit/woolwash-iot} and \TODO{open dataset}.
 \end{enumerate}
 
 % --------------------------------------------------------------------------
@@ -136,7 +153,9 @@ each time a sample is added; with no samples it reduces to the DoE prior.
 \caption{Architecture of the proposed IoT framework.}
 \label{fig:arch}
 \end{figure}
-Fig.~\ref{fig:arch} shows the architecture. \TODO{Describe sensor placement (photo), sampling period (2\,s), payload
+Fig.~\ref{fig:arch} shows the architecture. The node supports both HTTP and MQTT; the choice trades
+broker infrastructure against energy and overhead, as quantified in recent protocol comparisons
+\cite{seoane2021performance,dalmas2026comparative}. \TODO{Describe sensor placement (photo), sampling period (2\,s), payload
 size, power supply, enclosure, calibration of each sensor (method and uncertainty).}
 
 % --------------------------------------------------------------------------
@@ -179,13 +198,35 @@ scaling to multiple plants, security (device token, TLS).}
 dissertation, Tashkent Inst. Textile Light Ind., Tashkent, Uzbekistan, 2024.
 \bibitem{patent02351} R.~B. Tuguzbayeva \emph{et al.}, ``Device for squeezing wool in a wool washing bowl,'' Uzbekistan
 Utility Model Patent FAP~02351, 2023. \TODO{check inventors}
-\bibitem{xu2014iot} L.~D. Xu, W.~He, and S.~Li, ``Internet of things in industries: A survey,'' \emph{IEEE Trans. Ind.
-Informat.}, vol.~10, no.~4, pp.~2233--2243, Nov. 2014.
-\bibitem{kadlec2009soft} P.~Kadlec, B.~Gabrys, and S.~Strandt, ``Data-driven soft sensors in the process industry,''
-\emph{Comput. Chem. Eng.}, vol.~33, no.~4, pp.~795--814, 2009.
-\bibitem{tao2019dt} F.~Tao, H.~Zhang, A.~Liu, and A.~Y.~C. Nee, ``Digital twin in industry: State-of-the-art,''
-\emph{IEEE Trans. Ind. Informat.}, vol.~15, no.~4, pp.~2405--2415, Apr. 2019.
-\bibitem{montgomery} D.~C. Montgomery, \emph{Design and Analysis of Experiments}, 9th~ed. Hoboken, NJ, USA: Wiley, 2017.
+% ---- All entries below verified by DOI against Crossref (2020-2026) ----
+\bibitem{li2022water} X.~Li \emph{et~al.}, ``Water footprint assessment of wool products with a low-water footprint baseline,'' \emph{Sustain. Prod. Consum.}, vol.~34, pp.~310--317, Nov. 2022, doi: 10.1016/j.spc.2022.09.023.
+\bibitem{bianco2023life} I.~Bianco, G.~Picerno, and G.~A. Blengini, ``Life cycle assessment (LCA) of worsted and woollen processing in wool production: ReviWool\textregistered{} noils and other wool co-products,'' \emph{J. Clean. Prod.}, vol.~415, Art. no.~137877, Aug. 2023, doi: 10.1016/j.jclepro.2023.137877.
+\bibitem{shi2023inorganic} C.~Shi \emph{et~al.}, ``Inorganic composite coagulant for wool scouring wastewater treatment: Performance, kinetics and coagulation mechanism,'' \emph{Sep. Purif. Technol.}, vol.~313, Art. no.~123482, May 2023, doi: 10.1016/j.seppur.2023.123482.
+\bibitem{sinisaari2025performance} T.~Sinisaari, J.~Nieminen, A.~Ora, M.~M\"{a}ntt\"{a}ri, and T.~Rissanen, ``Performance comparison of four polymeric ultrafiltration membranes for wool scouring effluent treatment,'' \emph{Water Resour. Ind.}, vol.~34, Art. no.~100333, Dec. 2025, doi: 10.1016/j.wri.2025.100333.
+\bibitem{qiu2020edge} T.~Qiu, J.~Chi, X.~Zhou, Z.~Ning, M.~Atiquzzaman, and D.~O. Wu, ``Edge computing in industrial Internet of Things: Architecture, advances and challenges,'' \emph{IEEE Commun. Surveys Tuts.}, vol.~22, no.~4, pp.~2462--2488, 4th Quart. 2020, doi: 10.1109/COMST.2020.3009103.
+\bibitem{deng2020edge} S.~Deng, H.~Zhao, W.~Fang, J.~Yin, S.~Dustdar, and A.~Y. Zomaya, ``Edge intelligence: The confluence of edge computing and artificial intelligence,'' \emph{IEEE Internet Things J.}, vol.~7, no.~8, pp.~7457--7469, Aug. 2020, doi: 10.1109/JIOT.2020.2984887.
+\bibitem{yu2022integrated} W.~Yu, Y.~Liu, T.~Dillon, W.~Rahayu, and F.~Mostafa, ``An integrated framework for health state monitoring in a smart factory employing IoT and big data techniques,'' \emph{IEEE Internet Things J.}, vol.~9, no.~3, pp.~2443--2454, Feb. 2022, doi: 10.1109/JIOT.2021.3096637.
+\bibitem{yu2023edge} W.~Yu, Y.~Liu, T.~Dillon, and W.~Rahayu, ``Edge computing-assisted IoT framework with an autoencoder for fault detection in manufacturing predictive maintenance,'' \emph{IEEE Trans. Ind. Informat.}, vol.~19, no.~4, pp.~5701--5710, Apr. 2023, doi: 10.1109/TII.2022.3178732.
+\bibitem{zhang2026trinity} C.~Zhang, X.~Zhang, J.~Dong, L.~Ma, C.~Zhang, and K.~Peng, ``Trinity of safety--quality--efficiency: Cloud--edge--device collaborative monitoring for manufacturing systems with industrial validation,'' \emph{IEEE Internet Things J.}, vol.~13, no.~7, pp.~12702--12715, Apr. 2026, doi: 10.1109/JIOT.2026.3652179.
+\bibitem{gonzalez2022hypnos} A.~Gonzalez-Perez and S.~Casteleyn, ``Hypnos: A hardware and software toolkit for energy-aware sensing in low-cost IoT nodes,'' \emph{IEEE Internet Things J.}, vol.~9, no.~15, pp.~13524--13541, Aug. 2022, doi: 10.1109/JIOT.2022.3145338.
+\bibitem{kalamaras2025low} S.~D. Kalamaras, M.-A. Tsitsimpikou, C.~A. Tzenos, A.~A. Lithourgidis, D.~S. Pitsikoglou, and T.~A. Kotsopoulos, ``A low-cost IoT system based on the ESP32 microcontroller for efficient monitoring of a pilot anaerobic biogas reactor,'' \emph{Appl. Sci.}, vol.~15, no.~1, Art. no.~34, Jan. 2025, doi: 10.3390/app15010034.
+\bibitem{alqoud2022industry} A.~Alqoud, D.~Schaefer, and J.~Milisavljevic-Syed, ``Industry 4.0: A systematic review of legacy manufacturing system digital retrofitting,'' \emph{Manuf. Rev.}, vol.~9, Art. no.~32, 2022, doi: 10.1051/mfreview/2022031.
+\bibitem{leng2021digital} J.~Leng, D.~Wang, W.~Shen, X.~Li, Q.~Liu, and X.~Chen, ``Digital twins-based smart manufacturing system design in Industry 4.0: A review,'' \emph{J. Manuf. Syst.}, vol.~60, pp.~119--137, Jul. 2021, doi: 10.1016/j.jmsy.2021.05.011.
+\bibitem{friederich2022framework} J.~Friederich, D.~P. Francis, S.~Lazarova-Molnar, and N.~Mohamed, ``A framework for data-driven digital twins of smart manufacturing systems,'' \emph{Comput. Ind.}, vol.~136, Art. no.~103586, Apr. 2022, doi: 10.1016/j.compind.2021.103586.
+\bibitem{perno2022implementation} M.~Perno, L.~Hvam, and A.~Haug, ``Implementation of digital twins in the process industry: A systematic literature review of enablers and barriers,'' \emph{Comput. Ind.}, vol.~134, Art. no.~103558, Jan. 2022, doi: 10.1016/j.compind.2021.103558.
+\bibitem{han2024prediction} P.~H. Han, X.~Li, R.~Liu, S.~Zhang, and C.~Yuan, ``Prediction method of carding process production quality based on digital twin technology,'' \emph{Textile Res. J.}, vol.~94, no.~5--6, pp.~713--724, Mar. 2024, doi: 10.1177/00405175231217120.
+\bibitem{xu2025zero} Y.~Xu \emph{et~al.}, ``Zero-defect manufacturing in the textile industry: A review of current advances and challenges,'' \emph{Textile Res. J.}, vol.~95, no.~1--2, pp.~194--219, Jan. 2025, doi: 10.1177/00405175241260892.
+\bibitem{safavi2025clothing} G.~Safavi~Jahromi and S.~Ghazinoory, ``Clothing industry in transition from Industry 4.0 to Industry 5.0,'' \emph{J. Textile Inst.}, vol.~116, no.~3, pp.~365--379, 2025, doi: 10.1080/00405000.2024.2336438.
+\bibitem{ingle2025review} N.~Ingle and W.~J. Jasper, ``A review of the evolution and concepts of deep learning and AI in the textile industry,'' \emph{Textile Res. J.}, vol.~95, no.~13--14, pp.~1709--1737, Jul. 2025, doi: 10.1177/00405175241310632.
+\bibitem{kasturi2022methodological} S.~Kasturi and B.~A. Kannappan, ``A methodological framework to benchmark and monitor energy performance in textile wet processing small and medium enterprises: Proposal and evaluation,'' \emph{Energy Sustain. Dev.}, vol.~71, pp.~585--599, Dec. 2022, doi: 10.1016/j.esd.2022.11.001.
+\bibitem{sun2021survey} Q.~Sun and Z.~Ge, ``A survey on deep learning for data-driven soft sensors,'' \emph{IEEE Trans. Ind. Informat.}, vol.~17, no.~9, pp.~5853--5866, Sep. 2021, doi: 10.1109/TII.2021.3053128.
+\bibitem{zhang2021novel} X.-H. Zhang, Y.~Xu, Y.-L. He, and Q.-X. Zhu, ``Novel manifold learning based virtual sample generation for optimizing soft sensor with small data,'' \emph{ISA Trans.}, vol.~109, pp.~229--241, Mar. 2021, doi: 10.1016/j.isatra.2020.10.006.
+\bibitem{ahmad2020gray} I.~Ahmad, A.~Ayub, M.~Kano, and I.~I. Cheema, ``Gray-box soft sensors in process industry: Current practice, and future prospects in era of big data,'' \emph{Processes}, vol.~8, no.~2, Art. no.~243, Feb. 2020, doi: 10.3390/pr8020243.
+\bibitem{bikmukhametov2020combining} T.~Bikmukhametov and J.~J\"{a}schke, ``Combining machine learning and process engineering physics towards enhanced accuracy and explainability of data-driven models,'' \emph{Comput. Chem. Eng.}, vol.~138, Art. no.~106834, Jul. 2020, doi: 10.1016/j.compchemeng.2020.106834.
+\bibitem{hasnen2023semi} S.~H. Hasnen, M.~Shahid, H.~Zabiri, and S.~A.~A. Taqvi, ``Semi-supervised adaptive PLS soft-sensor with PCA-based drift correction method for online valuation of NOx emission in industrial water-tube boiler,'' \emph{Process Saf. Environ. Prot.}, vol.~172, pp.~787--801, Apr. 2023, doi: 10.1016/j.psep.2023.02.080.
+\bibitem{lee2026cost} H.-S. Lee, S.-H. Park, and S.-Y. Kim, ``Cost-efficient sensing with self-improving soft sensor based on predictive uncertainty estimation in IoT environments,'' \emph{IEEE Internet Things J.}, vol.~13, no.~2, pp.~3055--3068, Jan. 2026, doi: 10.1109/JIOT.2025.3631946.
+\bibitem{seoane2021performance} V.~Seoane, C.~Garcia-Rubio, F.~Almenares, and C.~Campo, ``Performance evaluation of CoAP and MQTT with security support for IoT environments,'' \emph{Comput. Netw.}, vol.~197, Art. no.~108338, Oct. 2021, doi: 10.1016/j.comnet.2021.108338.
+\bibitem{dalmas2026comparative} S.~H. Dalmas, A.~N. Bonatto, A.~dos~Santos~Roque, D.~H. Pohren, and E.~P. de~Freitas, ``Comparative analysis on energy consumption of the CoAP, HTTP, and MQTT protocols for resource-constrained IoT applications,'' \emph{IEEE Internet Things J.}, vol.~13, no.~15, pp.~32739--32749, Aug. 2026, doi: 10.1109/JIOT.2026.3690887.
 \end{thebibliography}
 
 % Short biographies WITHOUT photos save ~0.3 page (photos are optional at first submission;
