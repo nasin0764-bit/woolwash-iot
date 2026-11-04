@@ -9,3 +9,4 @@ date | task | question | decision | reason
 2026-11-04 | setup | Scheduled-task install was blocked by the safety classifier | Leave the install to the user; do not work around it | Persistence must be the user's own action
 2026-11-04 | 2 | CI push needs the workflow scope, which the token lacks | Keep the workflow in ci/ci.yml with activation steps | A rejected push would block all other commits; scope changes are the user's decision
 2026-11-04 | 3 | Commissioned advisory threshold for the S3 demonstration | ON 820 / OFF 700 NTU, just below the simulated 850 NTU liquor-change point | Shows an advance warning before each change without being circular (ON = 850 would trivially never fire)
+2026-11-04 | 6 | Moisture basis on the lab form | Wet basis, W = (wet - dry)/wet, stated on the form | Residual moisture after squeezing (55-60 %) in the dissertation is a wet-basis value; regain (dry basis) would give >100 %
