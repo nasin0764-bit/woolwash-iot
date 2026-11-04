@@ -32,7 +32,7 @@ that is not marked [HUMAN]**, finishes it, ticks it, and commits and pushes. The
       R² for the four models (day-separated split), packet delivery %, median and p95 latency, kWh/kg and L/kg
       (mean ± SD, 95% CI), and fault-detection delays. Write LaTeX table snippets to `results/field/` for Section VII.
       Test only on simulated data written to a temporary folder; never commit simulated field results.
-- [ ] 2. **Automated tests and CI:** add a pytest suite (softsensor stages, ingest/alerts, validation CSV exports,
+- [x] 2. **Automated tests and CI:** add a pytest suite (softsensor stages, ingest/alerts, validation CSV exports,
       fill_template, analyze_field). Add a GitHub Actions workflow running the tests and compiling the firmware with
       arduino-cli (esp32:esp32@3.3.12, pinned libraries). Make sure it passes.
 - [ ] 3. **Dirty-liquor advisory:** add hysteresis and a minimum-duration debounce, with the threshold editable per
@@ -56,3 +56,4 @@ that is not marked [HUMAN]**, finishes it, ticks it, and commits and pushes. The
 (one line per finished task: number | date | result | commit)
 
 1 | 2026-11-04 | tools/analyze_field.py done: calibration MAE/RMSE/bias per sensor, day-separated 4-model comparison, PDR + median/p95 latency, kWh/kg and L/kg (mean ± SD, 95% CI, Welch test), fault delays; 5 LaTeX snippets + summary.json. Tested end to end on simulated data in a temp folder only. Fixed a bug where lost packets of simulated trials were counted in strict mode. Template limit: 300 packet rows, so use 8-h windows. | see git log
+2 | 2026-11-04 | pytest suite: 17 tests (soft-sensor stages, ingest/token/alerts, out-of-sample lab prediction, packet gap export, CSV export, fill_template safety, analyze_field metrics) all pass locally. CI workflow written to ci/ci.yml (tests + pinned firmware compile) but NOT active: the gh token lacks the workflow scope; activation steps are at the top of ci/ci.yml. | see git log
