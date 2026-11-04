@@ -12,5 +12,4 @@ paper/*.synctex.gz
 firmware/woolwash_esp32/config.local.h
 .env
 paper/main_build.pdf
-paper/main_5authors.pdf
 paper/*_build.pdf

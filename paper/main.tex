@@ -221,14 +221,21 @@ transmit and receive timestamps, and network interruptions will be recorded.
 These are prospective sample-size targets, not completed sample counts.
 
 % --------------------------------------------------------------------------
-\section{Results}
-\subsection{Retrospective mechanical-process baseline}
+% ==========================================================================
+%  RESULTS ARE SPLIT INTO TWO SEPARATE SECTIONS ON PURPOSE:
+%   Sec. V  = historical dissertation data only (retrospective)
+%   Sec. VI = prospective factory IoT validation only (new measurements)
+%  Never mix numbers between them.
+% ==========================================================================
+\section{Results I: Retrospective Baseline From Historical Dissertation Data}
 \label{sec:baseline}
-The values in this subsection are transcribed from the historical experimental program \cite{tuguzbayeva2024}
+All values in this section are transcribed from the historical experimental program \cite{tuguzbayeva2024}
 (Tables 3.7, 3.9, 3.13 and Sec.~4.1 therein) and reanalysed; they are \emph{not} measurements of the IoT system and
-serve only as the physical-process reference and as the prior of the soft sensor.
+serve only as the physical-process reference and as the prior of the soft sensor. Measurements of the IoT system are
+reported exclusively in Sec.~\ref{sec:iot}.
 
-\emph{Factorial experiment.} The $2^3$ design (Table~\ref{tab:doe}) comprised three residual-moisture measurements per
+\subsection{Factorial experiment}
+The $2^3$ design (Table~\ref{tab:doe}) comprised three residual-moisture measurements per
 treatment, giving 24 observations over eight geometry combinations. Unweighted least squares on the eight run means
 gives the main-effects model~\eqref{eq:prior} ($b_0=57.3125$, $b_1=0.8125$, $b_2=-0.9458$, $b_3=0.2958$); the
 interaction terms were not significant ($|t|\le1.08<2.12$). The within-run variances satisfy Cochran's homogeneity
@@ -256,7 +263,8 @@ Run & $X_1$ & $X_2$ & $X_3$ & Replicates & Mean $\pm$ SD & $\hat W$\\\midrule
 8 & $+$ & $+$ & $+$ & 57.1, 58.8, 57.0 & 57.63 $\pm$ 1.01 & 57.48\\\bottomrule
 \end{tabular}\end{table}
 
-\emph{Historical industrial observations.} The improved design was tested at two enterprises in Uzbekistan
+\subsection{Historical industrial observations}
+The improved design was tested at two enterprises in Uzbekistan
 (Qashqadaryo and Surxondaryo regions) \cite{tuguzbayeva2024}. Table~\ref{tab:hist} summarises the reported values and
 midpoint-based normalisations. Post-squeezing moisture decreased by about 10 percentage points and water use per shift by
 76.5\,\%, but the improved line also had lower nominal throughput and lower clean-wool yield; the latter may reflect
@@ -288,7 +296,7 @@ consistent reading. $^d$Equal shift length and midpoint throughput assumed; name
 consumption. $^e$Spring; autumn wool. n/r: not reported.}
 \end{table}
 
-\subsection{Soft-sensor accuracy}
+\subsection{In-sample fit of the DoE prior}
 \begin{table}[t]\centering\small
 \caption{Historical in-sample DoE fit only (not an IoT or held-out field test)}
 \label{tab:insample}
@@ -301,13 +309,10 @@ All 24 historical readings & 0.588 & 0.494 & 0.826\\\bottomrule
 Table~\ref{tab:insample} reports residuals of model~\eqref{eq:prior}
 \emph{on the historical data from which its coefficients were estimated}.
 The 24-reading RMSE includes the variation among three repeats within each
-geometry. These values are not independent prediction errors. Neither the hybrid
-model nor the DoE-only, ridge-only, and random-forest baselines have yet been
-evaluated on held-out factory samples; their field RMSE, MAE and $R^2$ are not
-reported. Prospective comparisons will use identical test days and identical
-oven-dry reference measurements for every model.
+geometry. These values are not independent prediction errors; held-out accuracy
+is addressed only in Sec.~\ref{sec:iot}.
 
-\subsection{Resource indicators}
+\subsection{Derived resource proxies}
 The only available water figures (59.6 and 14.0\,m$^3$/shift)
 are historical reported process volumes with conflicting units elsewhere in
 the source. Under the additional assumptions of equal shift duration and
@@ -317,10 +322,26 @@ $(14/425)/(59.6/750)=0.415$, or a 58.5\,\% lower \emph{derived}
 water-to-throughput ratio. Actual L/kg cannot be established without the
 recorded shift duration and batch mass. Similarly, the nameplate-power/nominal-throughput
 proxies $13/750=0.0173$ and $4.2/425=0.00988$\,kWh/kg assume full rated load and
-throughput; they are \emph{not} metered specific energy. Shift-level
-$\mathrm{kWh/kg}=\Delta E/M$ and $\mathrm{L/kg}=1000\Delta V/M$, with measured
-electricity $\Delta E$, water $\Delta V$ and processed mass $M$, remain unreported.
+throughput; they are \emph{not} metered specific energy.
 No IoT-versus-non-IoT savings or significance test is claimed.
+
+% --------------------------------------------------------------------------
+\section{Results II: Prospective Factory IoT Validation}
+\label{sec:iot}
+This section is reserved for measurements collected with the deployed IoT system at the factory. No value from
+Sec.~\ref{sec:baseline} is reused here, and simulator output is excluded. \textbf{Status: not yet performed}; the
+subsections define what will be reported.
+\TODO{Replace each subsection with measured results (n, mean $\pm$ SD, test days) once the field campaign is complete.}
+
+\subsection{Held-out soft-sensor accuracy}
+The hybrid estimator, a DoE-only baseline, ordinary ridge regression and random forest will be evaluated on
+day-separated held-out oven-dry samples, using identical test days and reference measurements for every model, and
+reported as RMSE, MAE and $R^2$. The soft-sensor prediction for each sample is stored \emph{before} that sample is
+used for retraining, giving an out-of-sample error. No field accuracy has yet been measured.
+
+\subsection{Metered resource indicators}
+Shift-level $\mathrm{kWh/kg}=\Delta E/M$ and $\mathrm{L/kg}=1000\Delta V/M$ will be computed from metered
+electricity $\Delta E$, water $\Delta V$ and weighed processed mass $M$. These values remain unreported.
 
 \subsection{Communication performance}
 The proposed logger attaches a packet sequence number, boot identifier and
