@@ -38,7 +38,7 @@ that is not marked [HUMAN]**, finishes it, ticks it, and commits and pushes. The
 - [x] 3. **Dirty-liquor advisory:** add hysteresis and a minimum-duration debounce, with the threshold editable per
       machine through the API. Rerun `tools/sim_study.py` S3 only, if possible, and update the Section VI text and
       numbers.
-- [ ] 4. **Page budget:** tighten the paper text, especially Section VI, so that `main_5authors.pdf` is at most 6
+- [x] 4. **Page budget:** tighten the paper text, especially Section VI, so that `main_5authors.pdf` is at most 6
       pages, leaving at least 2 pages for Section VII. Keep every number and claim intact.
 - [ ] 5. **Russian and Uzbek guides:** `docs/PLAN_RU.md` and `docs/PLAN_UZ.md` (Latin script), covering the
       step-by-step plan to submission, the factory commissioning checklist and the flashing/setup steps for the ESP32.
@@ -58,3 +58,4 @@ that is not marked [HUMAN]**, finishes it, ticks it, and commits and pushes. The
 1 | 2026-11-04 | tools/analyze_field.py done: calibration MAE/RMSE/bias per sensor, day-separated 4-model comparison, PDR + median/p95 latency, kWh/kg and L/kg (mean ± SD, 95% CI, Welch test), fault delays; 5 LaTeX snippets + summary.json. Tested end to end on simulated data in a temp folder only. Fixed a bug where lost packets of simulated trials were counted in strict mode. Template limit: 300 packet rows, so use 8-h windows. | see git log
 2 | 2026-11-04 | pytest suite: 17 tests (soft-sensor stages, ingest/token/alerts, out-of-sample lab prediction, packet gap export, CSV export, fill_template safety, analyze_field metrics) all pass locally. CI workflow written to ci/ci.yml (tests + pinned firmware compile) but NOT active: the gh token lacks the workflow scope; activation steps are at the top of ci/ci.yml. | see git log
 3 | 2026-11-04 | Advisory now has a 30-s debounce, on/off hysteresis (800/700 NTU) and per-machine limits via GET/PUT /api/limits/{id} (token-protected; geometry PUT now token-protected too). S3 rerun: advisory active 64 % -> 37.8 % (default) -> 18.8 % (commissioned 820/700); all 56 simulated liquor changes preceded by an advisory; fault detection unchanged (60/60). 4 new tests (21 total) pass; Section VI text updated. | see git log
+4 | 2026-11-04 | Paper 7 -> 6 pages (Sec. III instrumentation, Sec. IV protocol, Sec. VII placeholders and Discussion condensed; all numbers and claims kept), ~2 pages free for Sec. VII within the 8-page free limit. main_5authors.pdf was locked by a PDF viewer; the 6-page build is paper/main_check.pdf (rebuild with check_pages.bat). | see git log

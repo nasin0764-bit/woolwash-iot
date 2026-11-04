@@ -18,3 +18,4 @@ firmware/woolwash_esp32/build/
 autopilot/logs/
 autopilot/state.json
 autopilot/STOP
+paper/main_check.pdf
