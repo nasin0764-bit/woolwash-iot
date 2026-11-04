@@ -1,0 +1,13 @@
+# runtime data
+*.db
+*.db-journal
+__pycache__/
+*.pyc
+# LaTeX build files
+paper/*.aux
+paper/*.log
+paper/*.out
+paper/*.synctex.gz
+# local secrets
+firmware/woolwash_esp32/config.local.h
+.env

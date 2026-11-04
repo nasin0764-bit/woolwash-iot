@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>WoolWash Monitor</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="theme-color" content="#1f5f8b">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="stylesheet" href="style.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+</head>
+<body>
+<header>
+  <div class="brand"><img src="icon.svg" alt=""><span data-i18n="title">WoolWash Monitor</span></div>
+  <div class="ctrl">
+    <select id="machine" aria-label="machine"></select>
+    <button id="lang" title="Language">RU</button>
+    <span id="conn" class="dot off" title="live"></span>
+  </div>
+</header>
+
+<nav>
+  <button class="tab active" data-tab="overview" data-i18n="overview">Overview</button>
+  <button class="tab" data-tab="charts" data-i18n="charts">Trends</button>
+  <button class="tab" data-tab="lab" data-i18n="lab">Lab &amp; model</button>
+</nav>
+
+<main>
+  <section id="overview" class="pane active">
+    <div id="simbadge" class="badge hidden" data-i18n="simdata">SIMULATED DATA</div>
+    <div class="tiles">
+      <div class="tile big"><label data-i18n="moisture">Residual moisture (predicted)</label><b id="k-moist">–</b><small>%</small></div>
+      <div class="tile"><label data-i18n="power">Power</label><b id="k-power">–</b><small>kW</small></div>
+      <div class="tile"><label data-i18n="omega">Squeeze drum ω</label><b id="k-omega">–</b><small>rad/s</small></div>
+      <div class="tile"><label data-i18n="feed">Feed rate</label><b id="k-feed">–</b><small>kg/h</small></div>
+      <div class="tile"><label data-i18n="kwhkg">Specific energy</label><b id="k-kwhkg">–</b><small>kWh/kg</small></div>
+      <div class="tile"><label data-i18n="lkg">Specific water</label><b id="k-lkg">–</b><small>L/kg</small></div>
+    </div>
+    <h2 data-i18n="bowls">Washing bowls</h2>
+    <div id="bowls" class="bowls"></div>
+    <h2 data-i18n="alerts">Alerts</h2>
+    <ul id="alerts" class="alerts"></ul>
+    <p class="muted"><span data-i18n="updated">Last update</span>: <span id="updated">–</span></p>
+  </section>
+
+  <section id="charts" class="pane">
+    <div class="row">
+      <label data-i18n="window">Window</label>
+      <select id="win"><option value="15">15 min</option><option value="60" selected>1 h</option>
+        <option value="480">8 h</option><option value="1440">24 h</option></select>
+      <a id="csv" class="btn" href="#" data-i18n="export">Export CSV</a>
+    </div>
+    <div class="chart"><canvas id="c-moist"></canvas></div>
+    <div class="chart"><canvas id="c-temp"></canvas></div>
+    <div class="chart"><canvas id="c-turb"></canvas></div>
+    <div class="chart"><canvas id="c-power"></canvas></div>
+  </section>
+
+  <section id="lab" class="pane">
+    <h2 data-i18n="addlab">Add lab moisture sample</h2>
+    <p class="muted" data-i18n="labhelp">Take a wool sample right after the squeeze device, measure residual moisture by oven-drying (105 °C to constant mass) and enter it here. The current machine state is attached automatically and the soft sensor is recalibrated.</p>
+    <form id="labform" class="row">
+      <input id="labval" type="number" step="0.01" min="0" max="100" required placeholder="%">
+      <input id="labnote" type="text" placeholder="note">
+      <button class="btn" type="submit" data-i18n="save">Save</button>
+    </form>
+    <h2 data-i18n="model">Soft-sensor model</h2>
+    <pre id="modelinfo" class="code">–</pre>
+    <h2 data-i18n="samples">Samples</h2>
+    <table class="tbl"><thead><tr><th data-i18n="time">Time</th><th>W, %</th><th data-i18n="note">Note</th></tr></thead>
+      <tbody id="labrows"></tbody></table>
+  </section>
+</main>
+<script src="app.js"></script>
+</body>
+</html>
