@@ -44,19 +44,24 @@ Textile and Light Industry, Uzbekistan.}}
 \maketitle
 
 \begin{abstract}
-Wool scouring is among the most water- and energy-intensive steps in primary wool processing, yet small regional
-plants operate their machines without any instrumentation, and the key quality variable---residual moisture of the wool
-after each squeeze stage---is measured only occasionally by oven drying. This paper presents a low-cost Internet of Things
-(IoT) framework for a compact five-bowl wool scouring machine with an improved ribbed-drum/mesh squeezing device.
-An ESP32-based edge node acquires bowl temperature, liquor level and turbidity, squeeze-drum angular speed, make-up
-water flow and electrical power, and streams them over Wi-Fi (HTTP/MQTT) to a server that provides storage, alarms,
-per-kilogram resource indicators and a bilingual web/mobile application. We propose a hybrid soft sensor in which a
-design-of-experiments (DoE) regression model of the squeezing device, obtained from a $2^3$ full-factorial experiment,
-serves as a physics-informed prior, and an online ridge-regression correction learned from sparse laboratory samples
-accounts for operating conditions. In a \TODO{N}-shift field deployment at \TODO{plant}, the soft sensor achieved an RMSE
-of \TODO{x}\,\% against oven-dry reference measurements, compared with \TODO{y}\,\% for the DoE model alone and
-\TODO{z}\,\% for a purely data-driven model, while the system delivered \TODO{packet-delivery ratio}\,\% of messages with a
-median latency of \TODO{ms}. The measured specific energy and water consumption were \TODO{kWh/kg} and \TODO{L/kg}.
+Wool scouring requires substantial water and electricity, while residual moisture
+is normally assessed off-line. This study presents an Internet of Things (IoT)
+architecture and a hybrid soft-sensor formulation for a compact five-bowl wool
+scouring machine with an improved ribbed-drum squeezing device. A geometry-based
+prior is derived from 24 historical observations in a $2^3$ factorial experiment,
+and a proposed regularised correction uses process measurements and sparse oven-dry
+samples. Reanalysis of the historical data gave a four-coefficient moisture model
+that passed the reported Cochran and lack-of-fit criteria; its in-sample RMSE was
+0.59 percentage points across 24 readings (0.23 points across eight run means).
+Historical factory records reported 65--70\,\% versus 55--60\,\% post-squeezing
+moisture, 59.6 versus 14.0\,m$^3$ of water per shift, and 13 versus 4.2\,kW
+installed power for the existing and improved machines, respectively. These
+results describe the mechanical process, not performance of the proposed IoT
+system. Sensor calibration, held-out soft-sensor accuracy, packet delivery,
+network latency, and metered per-kilogram resource use remain to be measured in
+a prospective field study. The paper therefore reports a reproducible retrospective
+baseline and an implementation and validation protocol, not a validated factory
+IoT deployment.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -108,14 +113,17 @@ transport, server-side analytics and an installable bilingual (EN/RU) web/mobile
 (geometry prior) with an online, regularised correction for operating conditions, calibrated from sparse laboratory samples.
 \item Real-time per-kilogram resource indicators (kWh/kg, L/kg) and rule-based fault alarms (heater failure, low level,
 dirty liquor, drum speed deviation).
-\item A field deployment on an industrial machine with \TODO{N} shifts of data, with open code at
-\url{https://github.com/nasin0764-bit/woolwash-iot} and \TODO{open dataset}.
+\item Reanalysis of the historical mechanical-process baseline and an open-source IoT implementation at
+\url{https://github.com/nasin0764-bit/woolwash-iot}; the prospective field validation is defined but has not yet
+been completed.
 \end{enumerate}
 
 % --------------------------------------------------------------------------
 \section{Machine and Squeezing Model}
-The machine comprises five bowls (2.5\,m$^3$ each); moving rakes (length 250\,mm, linear speed \TODO{0.15}\,m/s) transport
-the wool, and each bowl is followed by a squeezing device with a ribbed drum of diameter $D$, a mesh of hole diameter
+The machine comprises five bowls with stated internal dimensions of $2500\times600\times515$\,mm
+\cite{tuguzbayeva2024}\TODO{the source also states 2.5\,m$^3$ per bowl, whereas these dimensions give
+0.77\,m$^3$; confirm from the engineering drawing}; moving rakes (length 250\,mm, historically calculated linear
+speed 0.15\,m/s \cite{tuguzbayeva2024}, to be verified in the field) transport the wool, and each bowl is followed by a squeezing device with a ribbed drum of diameter $D$, a mesh of hole diameter
 $d$ and a drum--mesh gap $h$ \cite{tuguzbayeva2024}.
 
 \subsection{DoE prior}
@@ -137,7 +145,11 @@ $\boldsymbol\phi=[(\omega-\omega_0)/s_\omega,\,(q-q_0)/s_q,\,(T-T_0)/s_T,\,(\tau
 where $(\mathbf w,c)$ minimise $\sum_i (W_i - W_{0,i} - \mathbf w^\top\boldsymbol\phi_i - c)^2 + \lambda\|\mathbf w\|^2$
 over laboratory samples $W_i$ taken after the squeezer and dried at 105\,$^\circ$C. The model is refitted on the server
 each time a sample is added; with no samples it reduces to the DoE prior.
-\TODO{Compare with: DoE only; ridge/GPR/random forest without prior; report learning curve vs number of samples.}
+The DoE regression is evaluated in Sec.~\ref{sec:baseline} using its historical observations.
+A comparative assessment of the proposed hybrid estimator, a DoE-only baseline,
+ordinary ridge regression, and random forest requires temporally held-out field
+samples. No such model comparison is claimed from the retrospective geometry
+experiment.
 
 % --------------------------------------------------------------------------
 \section{IoT System Architecture}
@@ -160,13 +172,49 @@ each time a sample is added; with no samples it reduces to the DoE prior.
 \end{figure}
 Fig.~\ref{fig:arch} shows the architecture. The node supports both HTTP and MQTT; the choice trades
 broker infrastructure against energy and overhead, as quantified in recent protocol comparisons
-\cite{seoane2021performance,dalmas2026comparative}. \TODO{Describe sensor placement (photo), sampling period (2\,s), payload
-size, power supply, enclosure, calibration of each sensor (method and uncertainty).}
+\cite{seoane2021performance,dalmas2026comparative}.
+
+\emph{Proposed instrumentation.} Five DS18B20 probes are positioned at mid-depth in the five bowls,
+approximately 10\,cm from the wall and away from direct steam injection. Five waterproof JSN-SR04T
+rangefinders face the liquor surfaces from above the bowls; two turbidity probes are
+placed in side-stream sampling cups for bowls~1 and~2. A Hall-effect pickup on the
+first squeeze-drum shaft measures angular speed, a pulse flowmeter measures fresh-water
+make-up, and a PZEM-004T-type metering interface monitors machine electricity use.
+The design specifies an isolated 5-V DIN-rail supply and an IP65 enclosure; the
+nominal proposed acquisition interval is 2\,s. Wiring, protective isolation, and
+mains connections require a qualified electrician.
+
+\emph{Planned calibration.} The probes will be checked against a reference thermometer,
+physical depth measurements, timed volumetric water collection (20-L reference),
+formazin turbidity standards, a handheld tachometer, and a revenue-grade power/energy
+meter, respectively. Calibration error and uncertainty will be estimated from the
+actual paired readings; they cannot be inferred from a manufacturer specification.
+The transmitted JSON payload size and the node's electricity consumption will be
+logged on installed hardware. The repository describes the planned hardware and
+commissioning protocol; these statements do not establish installation or accuracy.
 
 % --------------------------------------------------------------------------
 \section{Experimental Setup}
-\TODO{Plant, dates, wool type (spring/autumn Karakul), number of shifts, lab sampling protocol (every 30 min, 3 replicates),
-train/test split by day, network environment (AP distance, RSSI).}
+\emph{Retrospective material.} The available historical evidence comprises a
+$2^3$ geometry experiment ($8$ settings and $3$ repeated moisture readings per
+setting) and mechanical-process factory comparisons reported for ``Oqbo'tayeva Zulxumor''
+in Dehqonobod (Qashqadaryo) and ``Hisori jun'' in Oltinsoy (Surxondaryo),
+Uzbekistan \cite{tuguzbayeva2024}. No ESP32
+telemetry, calibrated reference time series, commissioning date, or shift-level
+IoT log is included in those records.
+
+\emph{Prospective validation design (not yet performed).} The field protocol
+specifies at least five conventional-process shifts and ten improved-process
+shifts, when a comparable conventional machine is available. Spring and autumn
+wool are to be identified by batch; feed mass, operating hours and meter readings
+will be recorded for each shift. After squeezing, oven-dry reference moisture will
+be sampled approximately every 30\,min at 105\,$^\circ$C using three laboratory
+replicates per sampling point. At least 60 labelled calibration observations and
+20 additional observations on separate days are targeted for the held-out test
+set. Data must be divided by \emph{day}, not randomly by replicate, to prevent
+leakage. Access-point distance, received signal strength (RSSI), sequence numbers,
+transmit and receive timestamps, and network interruptions will be recorded.
+These are prospective sample-size targets, not completed sample counts.
 
 % --------------------------------------------------------------------------
 \section{Results}
@@ -237,42 +285,99 @@ consumption. $^e$Spring; autumn wool. n/r: not reported.}
 \end{table}
 
 \subsection{Soft-sensor accuracy}
-\begin{table}[t]\centering\caption{Residual-moisture prediction on held-out field samples}
+\begin{table}[t]\centering\small
+\caption{Historical in-sample DoE fit only (not an IoT or held-out field test)}
+\label{tab:insample}
 \begin{tabular}{lccc}\toprule
-Model & RMSE (\%) & MAE (\%) & $R^2$\\\midrule
-DoE prior only \eqref{eq:prior} & \TODO{} & \TODO{} & \TODO{}\\
-Data-driven ridge (no prior) & \TODO{} & \TODO{} & \TODO{}\\
-Random forest (no prior) & \TODO{} & \TODO{} & \TODO{}\\
-\textbf{Hybrid (proposed)} & \TODO{} & \TODO{} & \TODO{}\\\bottomrule
-\end{tabular}\end{table}
+Evaluation set & RMSE (pp) & MAE (pp) & $R^2$\\\midrule
+Eight treatment means & 0.229 & 0.185 & 0.969\\
+All 24 historical readings & 0.588 & 0.494 & 0.826\\\bottomrule
+\end{tabular}
+\end{table}
+Table~\ref{tab:insample} reports residuals of model~\eqref{eq:prior}
+\emph{on the historical data from which its coefficients were estimated}.
+The 24-reading RMSE includes the variation among three repeats within each
+geometry. These values are not independent prediction errors. Neither the hybrid
+model nor the DoE-only, ridge-only, and random-forest baselines have yet been
+evaluated on held-out factory samples; their field RMSE, MAE and $R^2$ are not
+reported. Prospective comparisons will use identical test days and identical
+oven-dry reference measurements for every model.
 
 \subsection{Resource indicators}
-\TODO{kWh/kg and L/kg per shift, baseline vs improved machine, mean $\pm$ SD, $n$.}
+The only available water figures (59.6 and 14.0\,m$^3$/shift)
+are historical reported process volumes with conflicting units elsewhere in
+the source. Under the additional assumptions of equal shift duration and
+midpoint throughputs of 750 and 425\,kg/h, the ratio of water volume per
+kilogram for improved versus conventional processing is
+$(14/425)/(59.6/750)=0.415$, or a 58.5\,\% lower \emph{derived}
+water-to-throughput ratio. Actual L/kg cannot be established without the
+recorded shift duration and batch mass. Similarly, the nameplate-power/nominal-throughput
+proxies $13/750=0.0173$ and $4.2/425=0.00988$\,kWh/kg assume full rated load and
+throughput; they are \emph{not} metered specific energy. Shift-level
+$\mathrm{kWh/kg}=\Delta E/M$ and $\mathrm{L/kg}=1000\Delta V/M$, with measured
+electricity $\Delta E$, water $\Delta V$ and processed mass $M$, remain unreported.
+No IoT-versus-non-IoT savings or significance test is claimed.
 
 \subsection{Communication performance}
-\TODO{Packet delivery ratio, latency distribution, outages, energy of node.}
+The proposed logger attaches a packet sequence number, boot identifier and
+transmission timestamp to each message, allowing the server to identify sequence
+gaps and calculate delivery ratio $100N_{\rm received}/N_{\rm sent}$.
+For clock-synchronised edge and server devices, one-way delay is
+$t_{\rm receive}-t_{\rm transmit}$; the protocol will report the median,
+95th-percentile delay, outage intervals and RSSI distribution. The repository's
+simulator can exercise the software pipeline, but simulator logs are excluded
+from factory performance analysis. No measured message-delivery percentage,
+latency distribution, outage duration or edge-node energy demand is available.
 
 \subsection{Fault detection}
-\TODO{Detection delay and false-alarm rate for heater-off, low-level, drum-speed scenarios.}
+The design includes rule-based alerts for heater-off, low liquor level, abnormal
+drum speed and excessive turbidity. After risk assessment, supervised fault
+injection will be performed on an instrumented machine without disabling safety
+interlocks. Detection delay will be measured from the independently recorded
+fault onset to the first correctly logged alert; false-alarm rate will use
+normal-operation monitoring time as its denominator. No experimental detection
+delays, sensitivity or false-alarm rates have yet been measured. Simulated fault
+demonstrations validate code paths only, not factory detection performance.
 
 % --------------------------------------------------------------------------
 \section{Discussion and Limitations}
-\emph{Validation boundary.} The historical data of Sec.~\ref{sec:baseline} provide a physical-process reference but do
-not evaluate the sensing, networking or analytics of the proposed system. Only the prospective measurements reported in
-the remaining subsections of Sec.~V---sensor calibration errors, delivery ratio and latency, and baseline-versus-IoT
-operating outcomes under matched conditions---support claims about the IoT architecture.
-\TODO{Generalisation across wool types, sensor fouling (turbidity probes in alkaline liquor), Wi-Fi in wet halls,
-scaling to multiple plants, security (device token, TLS).}
+The historical data establish a reproducible design-of-experiments baseline and
+an engineering rationale for the ribbed-drum and mesh configuration. They do
+not validate the IoT hardware, hybrid estimator, networking or any claimed
+operational savings from IoT feedback. The in-sample error metrics in
+Table~\ref{tab:insample} are not a substitute for held-out accuracy, and the
+water volumes are inconsistent between source tables. The improved machine
+also has lower nominal throughput and clean-wool yield, which may reflect
+increased impurity removal or undesired fibre loss; no matched fibre-quality
+assays establish the cause. Further limits include seasonal changes in greasy
+wool, sensor fouling in hot alkaline liquor, Wi-Fi attenuation and interference
+in wet industrial halls, and the absence of multi-site deployment evidence.
+Access tokens, TLS, role-based access and backups should be verified on the
+actual factory network rather than treated as demonstrated security controls.
+Hence the present work is a system design and retrospective baseline study,
+not evidence of proven IoT effectiveness.
 
 \section{Conclusion}
-\TODO{}
+An ESP32-based architecture and a DoE-informed hybrid soft-sensor formulation
+were specified for a compact wool-scouring machine. Reanalysis of 24 historical
+moisture observations confirmed an adequate four-term geometry model; the
+in-sample RMSE was 0.588 percentage points across individual readings.
+Historical records also suggest lower residual moisture and reduced water
+volume per shift for the improved \emph{mechanical} process, subject to data
+comparability and unit limitations. No field measurements yet establish the
+accuracy, reliability, latency, alarm performance or per-kilogram resource
+benefits of the proposed IoT system. Independent, day-separated factory
+validation with calibrated sensors and metered consumption is required before
+such performance claims can be made.
 
 \bibliographystyle{IEEEtran}
-\begin{thebibliography}{9}
+\begin{thebibliography}{99}
 \bibitem{tuguzbayeva2024} R.~B. Tuguzbayeva, ``Improvement of the working parts of a wool washing machine,'' Ph.D.
 dissertation, Tashkent Inst. Textile Light Ind., Tashkent, Uzbekistan, 2024.
-\bibitem{patent02351} R.~B. Tuguzbayeva \emph{et al.}, ``Device for squeezing wool in a wool washing bowl,'' Uzbekistan
-Utility Model Patent FAP~02351, 2023. \TODO{check inventors}
+\bibitem{patent02351} R.~B. Tuguzbayeva, Sh.~Sh. Khakimov, F.~B. Ismoilov, Z.~O. Makhammadiev, and J.~B. Juraev,
+``Device for squeezing wool in a wool washing bowl,'' Uzbekistan Utility Model Patent FAP~02351,
+\emph{Rasmiy Axborotnoma}, no.~11, 2023.
+% Inventors as listed in dissertation ref. [52]; confirm against the official patent certificate.
 % ---- All entries below verified by DOI against Crossref (2020-2026) ----
 \bibitem{li2022water} X.~Li \emph{et~al.}, ``Water footprint assessment of wool products with a low-water footprint baseline,'' \emph{Sustain. Prod. Consum.}, vol.~34, pp.~310--317, Nov. 2022, doi: 10.1016/j.spc.2022.09.023.
 \bibitem{bianco2023life} I.~Bianco, G.~Picerno, and G.~A. Blengini, ``Life cycle assessment (LCA) of worsted and woollen processing in wool production: ReviWool\textregistered{} noils and other wool co-products,'' \emph{J. Clean. Prod.}, vol.~415, Art. no.~137877, Aug. 2023, doi: 10.1016/j.jclepro.2023.137877.
@@ -308,7 +413,7 @@ Utility Model Patent FAP~02351, 2023. \TODO{check inventors}
 % the editor may ask for them in the final version - keep bios to 3-4 lines each).
 \begin{IEEEbiographynophoto}{Robiya Tuguzbayeva}
 conducted her doctoral research in technical sciences at the Tashkent Institute of Textile and Light Industry,
-Uzbekistan, where she is an Assistant Professor with the Department of Natural Fiber Technology and Engineering.
+Uzbekistan, where she is a Senior Lecturer with the Department of Natural Fiber Technology and Engineering.
 Her research focuses on wool-scouring machinery, textile-processing technology, and the development of
 resource-efficient mechanical systems.
 \end{IEEEbiographynophoto}
