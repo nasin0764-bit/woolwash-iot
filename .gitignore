@@ -14,3 +14,4 @@ firmware/woolwash_esp32/config.local.h
 paper/main_build.pdf
 paper/*_build.pdf
 firmware/build/
+firmware/woolwash_esp32/build/
