@@ -50,12 +50,18 @@ retries automatically.
 2. *Boards Manager* → install **esp32 by Espressif, version 3.3.12** (version used for the published binaries).
 3. *Library Manager* → install **OneWire, DallasTemperature, ArduinoJson (7.x), PubSubClient,
    PZEM004Tv30** by Jakub Mandula (and HX711 only if `HAS_FEED_SCALE 1`).
-4. Open `firmware/woolwash_esp32/woolwash_esp32.ino`, board **ESP32 Dev Module**, upload.
+4. Open `firmware/woolwash_esp32/woolwash_esp32.ino`, board **ESP32 Dev Module**, *Tools → Flash Mode → **DIO***, upload.
+   (DIO works with every ESP32 flash chip and in Espressif QEMU; the default QIO crashed at flash init in the emulator.)
 
 **Command line (reproducible, pinned versions):** `firmware\build.bat` → writes `firmware\bin\`.
 
 Sensor flags and calibration constants are in `config.h` (rebuild after changing them). Wi-Fi and
 server settings are **not** compiled in. They are stored in the ESP32 flash by the setup page.
+
+## C2. Emulator boot test
+`powershell -ExecutionPolicy Bypass -File firmware\qemu_boot_test.ps1` boots the image in Espressif QEMU.
+Result for 1.1.0 (DIO): bootloader, banner and sensor scan pass; the run then stops at Wi-Fi start
+(`esp_phy_enable`), as expected, because QEMU has no Wi-Fi radio.
 
 ## D. Message format (one JSON per 2 s)
 

@@ -46,13 +46,18 @@ $text = if (Test-Path $Log) { Get-Content $Log -Raw } else { "" }
 Write-Host "`n----- serial output (first 60 lines) -----"
 ($text -split "`n" | Select-Object -First 60) -join "`n" | Write-Host
 Write-Host "-------------------------------------------`n"
+# QEMU has no Wi-Fi radio: the firmware is expected to stop in esp_phy_enable when it starts Wi-Fi.
+$phyStop = $text -match "esp_phy_enable"
+$otherCrash = ($text -replace "(?s)assert failed: esp_phy_enable.*?Rebooting\.\.\.", "") -match "Guru Meditation|assert failed|abort\(\)"
 $checks = [ordered]@{
-    "ROM bootloader started"       = $text -match "rst:0x1|ets "
-    "Firmware banner printed"      = $text -match "WoolWash-IoT FW \d+\.\d+\.\d+"
-    "Setup ran (sensor scan)"      = $text -match "DS18B20 probes found"
-    "Reached Wi-Fi/portal stage"   = $text -match "SETUP PORTAL|Wi-Fi OK|Wi-Fi failed"
-    "No crash (Guru Meditation)"   = $text -notmatch "Guru Meditation|abort\(\)|Backtrace:"
+    "ROM bootloader started"            = $text -match "rst:0x1|ets "
+    "Flash mode DIO (QEMU-compatible)"  = $text -match "mode:DIO"
+    "Firmware banner printed"           = $text -match "WoolWash-IoT FW \d+\.\d+\.\d+"
+    "Setup ran (sensor scan)"           = $text -match "DS18B20 probes found"
+    "Reached Wi-Fi start"               = ($text -match "SETUP PORTAL|Wi-Fi OK|Wi-Fi failed") -or $phyStop
+    "No crash before Wi-Fi start"       = -not $otherCrash
 }
 $checks.GetEnumerator() | ForEach-Object { "{0,-30} {1}" -f $_.Key, $(if ($_.Value) { "PASS" } else { "FAIL / not reached" }) }
-Write-Host "`nNote: 'Reached Wi-Fi/portal stage' may fail in QEMU because Wi-Fi is not emulated; that is not a firmware bug."
+if ($phyStop) { Write-Host "`nExpected in QEMU: the run stops in esp_phy_enable because the emulator has no Wi-Fi radio. The set-up portal and everything after it can only be tested on a real board." }
+Write-Host "Note: 'Settings cleared.' can appear in QEMU because GPIO0 (BOOT) reads low there; on a real board it is pulled up."
 Write-Host "Full log: $Log"

@@ -14,3 +14,4 @@ date | task | question | decision | reason
 2026-11-05 | 8 | Where the app keeps the device token | sessionStorage (cleared when the tab closes), never localStorage | Token protects machine settings; shared factory PCs/phones should not keep it
 2026-11-05 | 9 | Suggested reviewers | Authors of cited work, names only, affiliation/e-mail left as TODO | Inventing contact data would be wrong; the user must verify no conflict
 2026-11-05 | 11 | Emulator run was blocked | Provide a user-run script with a download size check; do not run it myself | Executing downloaded binaries is the user's call
+2026-11-05 | 11 | Flash mode after the QEMU crash | DIO for all builds | Works with every ESP32 flash chip and in QEMU; QIO crashed at flash init; speed loss irrelevant at a 2-s period
