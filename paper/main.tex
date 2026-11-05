@@ -66,7 +66,9 @@ network latency, and metered per-kilogram resource use remain to be measured in
 a prospective field study. In a simulation under stated assumptions, the hybrid
 estimator kept a root-mean-square error of 0.42--0.50 percentage points after a change of
 squeezing geometry, versus 1.0--2.2 points for purely data-driven models; the server software
-processed a message in a median of 2.0\,ms on a workstation. The paper therefore reports a
+processed a message in a median of 2.0\,ms on a workstation. An end-to-end emulation with three nodes, burst
+packet loss, a reset, an outage and a retrofit verified the full software chain and exposed, and led to the
+correction of, a resource-accounting error after node resets. The paper therefore reports a
 reproducible retrospective baseline, a simulation and bench study, and an implementation and
 validation protocol, not a validated factory IoT deployment.
 \end{abstract}
@@ -120,7 +122,8 @@ transport, server-side analytics and an installable bilingual (EN/RU) web/mobile
 (geometry prior) with an online, regularised correction for operating conditions, calibrated from sparse laboratory samples.
 \item Real-time per-kilogram resource indicators (kWh/kg, L/kg) and rule-based fault alarms (heater failure, low level,
 dirty liquor, drum speed deviation).
-\item Reanalysis of the historical mechanical-process baseline, a reproducible simulation and bench study, and an
+\item Reanalysis of the historical mechanical-process baseline, a reproducible simulation and bench study with an
+end-to-end emulated deployment, and an
 open-source IoT implementation (firmware, ready-made binaries, server, application) at
 \url{https://github.com/nasin0764-bit/woolwash-iot}; the prospective field validation is defined but has not yet
 been completed.
@@ -324,8 +327,9 @@ No IoT-versus-non-IoT savings or significance test is claimed.
 \section{Results II: Simulation and Bench Study}
 \label{sec:sim}
 This section contains \textbf{no factory data}. It combines a simulation of the soft sensor under stated assumptions,
-a measurement of the server software on a workstation, and a verification of the alarm logic on the simulator. All
-numbers are reproduced by \texttt{tools/sim\_study.py} in the open repository.
+a measurement of the server software on a workstation, a verification of the alarm logic on the simulator, and an
+end-to-end emulated deployment. All numbers are reproduced by \texttt{tools/sim\_study.py} and
+\texttt{tools/e2e\_emulation.py} in the open repository.
 
 \subsection{Soft-sensor sample efficiency and geometry transfer (simulation)}
 \emph{Set-up.} Ground-truth residual moisture is the DoE model~\eqref{eq:prior} plus a plant offset (0 or 1.5\,pp)
@@ -395,6 +399,67 @@ per-machine commissioned limits (on 820, off 700\,NTU) to 18.8\,\%; in both case
 changes was preceded by an advisory, with 57 and 56 advisory episodes, respectively. The limits are therefore set per
 machine from the plant's liquor-change practice at commissioning (\texttt{PUT /api/limits}).
 
+\subsection{End-to-end emulated deployment (pipeline rehearsal)}
+\label{sec:e2e}
+\emph{Set-up.} To exercise the complete chain before the field campaign, three emulated nodes sent the firmware's
+message format every 2\,s to the unmodified server process (HTTP, SQLite, soft sensor, alarms, KPIs, validation
+exports) for 8 simulated hours each after a 1-h warm-up; time was compressed by sending as fast as the server
+accepted. Each node emulates the firmware layer (sequence number, \texttt{boot\_id}, energy, water and feed counters
+that restart at boot) over a Gilbert--Elliott channel (loss 0.5\,\% in the good and 50\,\% in the bad state, mean
+burst 20\,s). The plants are the simulator of Sec.~\ref{sec:sim} with hidden moisture offsets of $+1.5$, $-1.0$ and
+$+0.5$\,pp. Scripted events were: on E1, a 60-s link loss followed by a brown-out reset (20\,s off) at 4\,h and a
+bowl-2 leak at 6.5\,h; on E2, a 10-min access-point outage at 5\,h and a bowl-3 heater failure at 6\,h; on E3, a drum
+retrofit from 250 to 300\,mm at 4\,h (\texttt{PUT /api/geometry}) and a drum-speed drop at 7\,h. Every 20\,min an
+operator sample (truth $+\,\mathcal N(0,\,0.664^2)$) was entered through \texttt{/api/lab}. The simulated truth is
+linear in the model features, so the soft-sensor errors below are optimistic relative to Table~\ref{tab:sim}.
+
+\begin{table}[t]\centering\footnotesize
+\caption{End-to-end emulation, 3 nodes $\times$ 8\,h at 2\,s (simulated plants and channel, real server software)}
+\label{tab:e2e}
+\setlength{\tabcolsep}{2.5pt}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{lccc}\toprule
+ & E1 (reset) & E2 (outage) & E3 (retrofit)\\\midrule
+Sent / delivered & 14390/14149 & 14400/13878 & 14400/14178\\
+PDR true / server est.\ (\%) & 98.33 / 98.53 & 96.38 / 96.38 & 98.46 / 98.46\\
+Feed error, fixed / naive (\%) & $-0.28$ / $-50.4$ & $-0.01$ / $-0.01$ & $-0.01$ / $-0.01$\\
+L/kg error, fixed / naive (\%) & $-0.53$ / $+3.81$ & $+0.01$ / $+0.01$ & $0.00$ / $0.00$\\
+Fault, detection delay & leak, 192\,s & heater, 80\,s & drum, 1st msg.\\\bottomrule
+\end{tabular}}
+
+\vspace{4pt}
+\caption{Prequential soft-sensor RMSE (pp) against the simulated truth; each sample is predicted before it is used
+for training (3 nodes, 24 samples each)}
+\label{tab:preq}
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{lcccc}\toprule
+Samples already used $n$ & 0 & 1--4 & 5--23 & after retrofit\\
+Evaluated samples & 3 & 12 & 45 & 12\\\midrule
+DoE prior only & 2.69 & 2.17 & 2.41 & 2.15\\
+\textbf{Hybrid (server, online)} & \textbf{2.69} & \textbf{0.68} & \textbf{0.44} & \textbf{0.71}\\
+Ridge, no prior & -- & 0.96 & 0.75 & 0.89\\\bottomrule
+\end{tabular}
+\end{table}
+
+\emph{Findings.} (i) The server's packet export reproduced the true delivery ratio exactly for the outage and the
+burst losses, but not across the reset: the 30 packets lost in the minute before the brown-out were invisible,
+because the new \texttt{boot\_id} restarts the sequence and no later packet reveals the gap; PDR was overestimated by
+0.2 points (Table~\ref{tab:e2e}). Losses just before a reset are therefore reported separately in the field study
+(Sec.~\ref{sec:iot}). (ii) The emulation exposed an accounting error in our server: taking last-minus-first of
+cumulative counters underestimated feed mass by 50\,\% after the reset. Summing increments within each
+\texttt{boot\_id} reduced the error to $-0.28$\,\% (feed) and $-0.53$\,\% (L/kg); the residue is what was consumed while
+the node was off or unheard and cannot be recovered without a non-volatile counter. kWh/kg was within 0.005\,\% on all
+nodes because energy and feed are lost in the same proportion. (iii) All three faults raised their alarm through
+the HTTP path despite packet loss, and no fault alarm occurred outside the fault and recovery windows in 42\,205
+delivered messages. (iv) The online hybrid estimate reached 0.68\,pp after 1--4 samples and 0.44\,pp after 5--23
+(0.82--0.90\,pp against the noisy lab values, whose own noise is 0.66\,pp), versus 0.75--0.96\,pp for a data-only ridge
+model; after the drum retrofit it stayed at 0.71\,pp. (v) Three concurrent clients were served at about
+99\,messages/s, 65 times the 1.5\,messages/s they require, with a loopback receive delay of 15\,ms (median; p95
+27\,ms). (vi) \texttt{fill\_template.py} and \texttt{analyze\_field.py} ran unchanged on the exports and produced
+the Section~\ref{sec:iot} tables (watermarked as simulated); the spreadsheet template holds only 300 packets, so the
+packet analysis reads the server's CSV export directly. These results verify software behaviour under assumed
+plant and channel models; they are not measurements of a factory network or plant.
+
 % --------------------------------------------------------------------------
 \section{Results III: Prospective Factory IoT Validation}
 \label{sec:iot}
@@ -413,8 +478,8 @@ day-separated held-out oven-dry samples with identical test days for every model
 sample is stored before that sample is used for retraining. (B) Shift-level $\mathrm{kWh/kg}=\Delta E/M$ and
 $\mathrm{L/kg}=1000\Delta V/M$ from metered electricity $\Delta E$, water $\Delta V$ and weighed mass $M$.
 (C) Delivery ratio $100N_{\rm received}/N_{\rm sent}$ from per-packet sequence numbers and the median and
-95th-percentile one-way delay $t_{\rm receive}-t_{\rm transmit}$ between NTP-synchronised clocks, with outages and
-RSSI. (D) Detection delay from an independently recorded onset of supervised faults (safety interlocks kept) to the
+95th-percentile one-way delay $t_{\rm receive}-t_{\rm transmit}$ between NTP-synchronised clocks, with outages,
+RSSI and node resets (losses just before a reset are counted from the serial log, Sec.~\ref{sec:e2e}). (D) Detection delay from an independently recorded onset of supervised faults (safety interlocks kept) to the
 first alert, and false alarms per hour of normal operation. None of these has yet been measured.
 
 % --------------------------------------------------------------------------
@@ -426,6 +491,8 @@ volumes are inconsistent between tables. The improved machine's lower throughput
 better impurity removal or fibre loss; no matched fibre-quality assays settle this. Further limits are seasonal
 changes in greasy wool, sensor fouling in hot alkaline liquor, Wi-Fi attenuation in wet halls, a single site, and
 security controls (tokens, TLS, access roles, backups) that still have to be verified on the plant network.
+The emulation (Sec.~\ref{sec:e2e}) also showed that sequence-based delivery statistics miss losses immediately
+before a node reset, and that counters which restart at boot lose the consumption of the off period.
 The simulation in Sec.~\ref{sec:sim} depends on assumed operating-effect sizes; it
 shows where the DoE prior can help (cold start, few labels, geometry changes) and where it
 cannot (many labels at a fixed geometry), but not how large these effects are in a plant.
@@ -442,7 +509,8 @@ volume per shift for the improved \emph{mechanical} process, subject to data
 comparability and unit limitations. A simulation with a staged, offset-shrinking
 calibration showed the benefit of the DoE prior to be confined to cold start, few
 labels and changes of geometry; the server software and alarm rules were verified
-on a workstation and simulator. No field measurements yet establish the
+on a workstation and simulator, and an end-to-end emulated deployment exercised the complete
+software chain. No field measurements yet establish the
 accuracy, reliability, latency, alarm performance or per-kilogram resource
 benefits of the proposed IoT system. Independent, day-separated factory
 validation with calibrated sensors and metered consumption is required before

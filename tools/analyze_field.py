@@ -115,10 +115,26 @@ def analyze_calibration(ws, sim_ok):
     return res, sim
 
 
-def analyze_packets(ws, sim_ok):
+def csv_packet_rows(paths):
+    """Rows of one or more server packets.csv exports (GET /api/validation/{id}/packets.csv) in the column
+    order of the template's 'Packet delivery' sheet. Use this when a trial has more packets than the
+    template holds (300 rows; one 8-h shift at 2 s is 14 400 packets)."""
+    def num(v):
+        return None if v in (None, "") else float(v)
+    out = []
+    for path in paths:
+        with open(path, newline="", encoding="utf-8") as fh:
+            for r in csv.reader(fh):
+                if not r or r[0] == "Trial ID":
+                    continue
+                out.append((r[0], num(r[1]), num(r[2]), num(r[3]), None, None, r[6], r[7]))
+    return out
+
+
+def analyze_packets(ws, sim_ok, csv_rows=None):
     sent = recv = neg = 0
     lat = []
-    allrows = list(rows(ws, ncols=8))
+    allrows = csv_rows if csv_rows is not None else list(rows(ws, ncols=8))
     # a trial with ANY simulated row is simulated as a whole (its lost-packet rows carry no SIM mark)
     sim_trials = {r[0] for r in allrows if SIM_MARK in str(r[7] or "").upper()}
     sim = bool(sim_trials)
@@ -245,6 +261,8 @@ def main():
     ap.add_argument("--test-frac-days", type=float, default=0.25)
     ap.add_argument("--out", default=str(ROOT / "results" / "field"))
     ap.add_argument("--allow-sim", action="store_true")
+    ap.add_argument("--packets-csv", nargs="+", default=None,
+                    help="server packets.csv export(s) to use instead of the template's 'Packet delivery' sheet")
     a = ap.parse_args()
 
     out = Path(a.out).resolve()
@@ -257,7 +275,8 @@ def main():
     summary, sim_any = {"generated_utc": datetime.now(timezone.utc).isoformat(timespec="seconds")}, False
 
     cal, s1 = analyze_calibration(wb["Sensor calibration"], a.allow_sim)
-    pk, s2 = analyze_packets(wb["Packet delivery"], a.allow_sim)
+    pk, s2 = analyze_packets(wb["Packet delivery"], a.allow_sim,
+                             csv_packet_rows(a.packets_csv) if a.packets_csv else None)
     bt = analyze_batches(wb["Water energy batches"])
     sim_any = s1 or s2
     summary.update({"calibration": cal, "packets": pk, "batches": bt})

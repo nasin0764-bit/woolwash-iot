@@ -1,0 +1,386 @@
+{
+ "what": "END-TO-END EMULATION - simulated plants, firmware layer and channel; real server software. NOT factory data.",
+ "config": {
+  "nodes": 3,
+  "period_s": 2.0,
+  "hours_per_node": 8.0,
+  "lab_every_min": 20.0,
+  "lab_sd_pp": 0.6640783086353597,
+  "ge_channel": {
+   "p_gb": 0.002,
+   "p_bg": 0.1,
+   "loss_g": 0.005,
+   "loss_b": 0.5
+  },
+  "node_events": {
+   "WW-E1": {
+    "offset": 1.5,
+    "reboot_at": 14400.0,
+    "reboot_link_loss_s": 60.0,
+    "reboot_down_s": 20.0,
+    "faults": [
+     [
+      "leak",
+      2,
+      23400.0,
+      600
+     ]
+    ]
+   },
+   "WW-E2": {
+    "offset": -1.0,
+    "outage": [
+     18000.0,
+     600.0
+    ],
+    "faults": [
+     [
+      "heater",
+      3,
+      21600.0,
+      1200
+     ]
+    ]
+   },
+   "WW-E3": {
+    "offset": 0.5,
+    "retrofit": [
+     14400.0,
+     {
+      "d_hole": 2.0,
+      "d_drum": 300.0,
+      "gap": 3.0
+     }
+    ],
+    "faults": [
+     [
+      "drum",
+      0,
+      25200.0,
+      300
+     ]
+    ]
+   }
+  }
+ },
+ "wall_s": 428.1,
+ "server_load": {
+  "messages_delivered": 42205,
+  "sustained_msgs_per_s_3_clients": 98.6,
+  "required_msgs_per_s_3_nodes": 1.5
+ },
+ "network": {
+  "WW-E1": {
+   "truth": {
+    "sent": 14390,
+    "delivered": 14149,
+    "pdr_pct": 98.32522585128561,
+    "lost_channel": 211,
+    "lost_outage": 0,
+    "lost_before_reboot": 30,
+    "boots": 2
+   },
+   "server_estimate": {
+    "sent": 14360,
+    "received": 14149,
+    "pdr_pct": 98.53064066852367,
+    "latency_ms_median": 15.0,
+    "latency_ms_p95": 27.0
+   },
+   "invisible_tail_losses": 30
+  },
+  "WW-E2": {
+   "truth": {
+    "sent": 14400,
+    "delivered": 13878,
+    "pdr_pct": 96.375,
+    "lost_channel": 222,
+    "lost_outage": 300,
+    "lost_before_reboot": 0,
+    "boots": 1
+   },
+   "server_estimate": {
+    "sent": 14400,
+    "received": 13878,
+    "pdr_pct": 96.375,
+    "latency_ms_median": 15.0,
+    "latency_ms_p95": 27.0
+   },
+   "invisible_tail_losses": 0
+  },
+  "WW-E3": {
+   "truth": {
+    "sent": 14400,
+    "delivered": 14178,
+    "pdr_pct": 98.45833333333333,
+    "lost_channel": 222,
+    "lost_outage": 0,
+    "lost_before_reboot": 0,
+    "boots": 1
+   },
+   "server_estimate": {
+    "sent": 14400,
+    "received": 14178,
+    "pdr_pct": 98.45833333333333,
+    "latency_ms_median": 15.0,
+    "latency_ms_p95": 27.0
+   },
+   "invisible_tail_losses": 0
+  }
+ },
+ "kpi": {
+  "WW-E1": {
+   "truth": {
+    "kwh_per_kg": 0.009910421995189565,
+    "l_per_kg": 11.594071633570787,
+    "feed_kg": 3388.9446182910096
+   },
+   "server": {
+    "kwh_per_kg": 0.00991,
+    "l_per_kg": 11.533,
+    "feed_kg": 3379.5
+   },
+   "naive_last_minus_first": {
+    "kwh_per_kg": 0.009959574822248116,
+    "l_per_kg": 12.03588329013388,
+    "feed_kg": 1682.12
+   },
+   "server_error_pct": {
+    "kwh_per_kg": -0.004258095061640351,
+    "l_per_kg": -0.5267488031896692,
+    "feed_kg": -0.27868907151903877
+   },
+   "naive_error_pct": {
+    "kwh_per_kg": 0.49597108056961353,
+    "l_per_kg": 3.8106686807404375,
+    "feed_kg": -50.364488374310874
+   }
+  },
+  "WW-E2": {
+   "truth": {
+    "kwh_per_kg": 0.009910425466507706,
+    "l_per_kg": 11.189173310474008,
+    "feed_kg": 3388.692409578909
+   },
+   "server": {
+    "kwh_per_kg": 0.00991,
+    "l_per_kg": 11.19,
+    "feed_kg": 3388.45
+   },
+   "naive_last_minus_first": {
+    "kwh_per_kg": 0.009910460535052899,
+    "l_per_kg": 11.189983620829581,
+    "feed_kg": 3388.4500000000003
+   },
+   "server_error_pct": {
+    "kwh_per_kg": -0.004293120503692519,
+    "l_per_kg": 0.007388298519051464,
+    "feed_kg": -0.007153484282728655
+   },
+   "naive_error_pct": {
+    "kwh_per_kg": 0.00035385509241016397,
+    "l_per_kg": 0.007241914421105121,
+    "feed_kg": -0.007153484282715236
+   }
+  },
+  "WW-E3": {
+   "truth": {
+    "kwh_per_kg": 0.00992507230349561,
+    "l_per_kg": 11.189942834040169,
+    "feed_kg": 3389.2040882130723
+   },
+   "server": {
+    "kwh_per_kg": 0.009925,
+    "l_per_kg": 11.19,
+    "feed_kg": 3388.96
+   },
+   "naive_last_minus_first": {
+    "kwh_per_kg": 0.00992510976818847,
+    "l_per_kg": 11.189509466030877,
+    "feed_kg": 3388.96
+   },
+   "server_error_pct": {
+    "kwh_per_kg": -0.0007284933892661759,
+    "l_per_kg": 0.0005108690962820639,
+    "feed_kg": -0.007201933159502916
+   },
+   "naive_error_pct": {
+    "kwh_per_kg": 0.00037747526380227744,
+    "l_per_kg": -0.0038728348814552746,
+    "feed_kg": -0.007201933159502916
+   }
+  }
+ },
+ "faults": {
+  "WW-E1": [
+   {
+    "kind": "leak",
+    "bowl": 2,
+    "detected": true,
+    "delay_s": 192.0
+   }
+  ],
+  "WW-E2": [
+   {
+    "kind": "heater",
+    "bowl": 3,
+    "detected": true,
+    "delay_s": 80.0
+   }
+  ],
+  "WW-E3": [
+   {
+    "kind": "drum",
+    "bowl": 0,
+    "detected": true,
+    "delay_s": 0.0
+   }
+  ]
+ },
+ "fault_alarm_messages_outside_fault_windows": {
+  "WW-E1": {
+   "advisory_msgs_liquor_dirty": 5273,
+   "advisory_msgs_moisture_high": 12975
+  },
+  "WW-E2": {
+   "advisory_msgs_liquor_dirty": 4899
+  },
+  "WW-E3": {
+   "advisory_msgs_liquor_dirty": 5318
+  }
+ },
+ "softsensor_prequential": {
+  "n=0": {
+   "samples": 3,
+   "hybrid_rmse_vs_true": 2.6873158851662104,
+   "hybrid_rmse_vs_lab": 2.6058715752443864,
+   "doe_rmse_vs_true": 2.6873158851662104,
+   "doe_rmse_vs_lab": 2.6058715752443864,
+   "ridge_rmse_vs_true": null,
+   "ridge_rmse_vs_lab": null
+  },
+  "1<=n<5": {
+   "samples": 12,
+   "hybrid_rmse_vs_true": 0.678695317011494,
+   "hybrid_rmse_vs_lab": 0.9020027716143671,
+   "doe_rmse_vs_true": 2.174132010711399,
+   "doe_rmse_vs_lab": 2.423073117620127,
+   "ridge_rmse_vs_true": 0.9565951700331754,
+   "ridge_rmse_vs_lab": 1.0489559981895407
+  },
+  "5<=n<24": {
+   "samples": 45,
+   "hybrid_rmse_vs_true": 0.4421655547165306,
+   "hybrid_rmse_vs_lab": 0.8161716458904681,
+   "doe_rmse_vs_true": 2.4051703566368094,
+   "doe_rmse_vs_lab": 2.5231426612240693,
+   "ridge_rmse_vs_true": 0.7511315957642644,
+   "ridge_rmse_vs_lab": 1.0677634909144014
+  },
+  "after retrofit": {
+   "samples": 12,
+   "hybrid_rmse_vs_true": 0.7076429184270827,
+   "hybrid_rmse_vs_lab": 0.8663170127999715,
+   "doe_rmse_vs_true": 2.1535339173863353,
+   "doe_rmse_vs_lab": 2.202706668321198,
+   "ridge_rmse_vs_true": 0.8944111178248565,
+   "ridge_rmse_vs_lab": 1.0937744760595225
+  }
+ },
+ "softsensor_final_model": {
+  "WW-E1": {
+   "geometry": {
+    "d_hole": 2.0,
+    "d_drum": 250.0,
+    "gap": 3.0,
+    "rake_len": 250.0
+   },
+   "prior": {
+    "b0": 57.31,
+    "b1": 0.81,
+    "b2": -0.95,
+    "b3": 0.3
+   },
+   "features": [
+    "drum_omega",
+    "feed_kg_h",
+    "temp_c",
+    "turbidity_ntu"
+   ],
+   "weights": [
+    -0.1304,
+    0.9076,
+    -0.3813,
+    0.9273
+   ],
+   "bias": 1.678,
+   "n_samples": 24,
+   "train_rmse": 0.709
+  },
+  "WW-E2": {
+   "geometry": {
+    "d_hole": 2.0,
+    "d_drum": 250.0,
+    "gap": 3.0,
+    "rake_len": 250.0
+   },
+   "prior": {
+    "b0": 57.31,
+    "b1": 0.81,
+    "b2": -0.95,
+    "b3": 0.3
+   },
+   "features": [
+    "drum_omega",
+    "feed_kg_h",
+    "temp_c",
+    "turbidity_ntu"
+   ],
+   "weights": [
+    0.1244,
+    0.8897,
+    0.1499,
+    0.4491
+   ],
+   "bias": 0.4554,
+   "n_samples": 24,
+   "train_rmse": 0.616
+  },
+  "WW-E3": {
+   "geometry": {
+    "d_hole": 2.0,
+    "d_drum": 300.0,
+    "gap": 3.0,
+    "rake_len": 250.0
+   },
+   "prior": {
+    "b0": 57.31,
+    "b1": 0.81,
+    "b2": -0.95,
+    "b3": 0.3
+   },
+   "features": [
+    "drum_omega",
+    "feed_kg_h",
+    "temp_c",
+    "turbidity_ntu"
+   ],
+   "weights": [
+    0.843,
+    1.141,
+    -0.4409,
+    0.6462
+   ],
+   "bias": 0.8327,
+   "n_samples": 24,
+   "train_rmse": 0.774
+  }
+ },
+ "field_rehearsal": {
+  "fill_template_rc": 0,
+  "fill_template_out": "packets: 14360 rows (300 written)\ncalibration: 24 rows (24 written)\nWARNING: more rows than the template holds. Use a shorter --hours window or extend the template ranges (and the Summary formulas) in Excel.\nWater/energy batches: enter the meter readings by hand (they come from physical meters).\nsaved -> C:\\Users\\Nasiba\\Desktop\\Tuguzbayeva\\WoolWash-IoT\\results\\emulation\\field_rehearsal\\WW-E1_filled_SIMULATED.xlsx\n",
+  "analyze_field_rc": 0,
+  "analyze_field_out": "{\"packets\": {\"sent\": 14360, \"received\": 14149, \"lost\": 211, \"pdr_pct\": 98.53064066852367, \"latency_ms\": {\"n\": 14149, \"median\": 15.0, \"p95\": 27.0, \"max\": 63.0}, \"negative_latencies\": 0}, \"contains_simulated\": true}\noutputs -> C:\\Users\\Nasiba\\Desktop\\Tuguzbayeva\\WoolWash-IoT\\results\\emulation\\field_rehearsal\n",
+  "analyze_field_err": ""
+ }
+}

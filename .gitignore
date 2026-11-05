@@ -19,3 +19,4 @@ autopilot/logs/
 autopilot/state.json
 autopilot/STOP
 paper/main_check.pdf
+results/emulation/_*_packets.csv

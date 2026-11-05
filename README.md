@@ -15,8 +15,10 @@ WoolWash-IoT/
 ├─ simulator/                 Digital-twin simulator (same payload as the ESP32, tagged "sim")
 ├─ tools/
 │  ├─ fill_template.py        fills docs/IEEE_IoT_Factory_Validation_Template.xlsx from the server
-│  └─ sim_study.py            simulation + bench study for the paper (results/sim_study, paper/figs)
+│  ├─ sim_study.py            simulation + bench study for the paper (results/sim_study, paper/figs)
+│  └─ e2e_emulation.py        end-to-end emulated deployment: 3 nodes -> real server (results/emulation)
 ├─ results/sim_study/         outputs of sim_study.py (JSON)
+├─ results/emulation/         outputs of e2e_emulation.py (SIMULATED, never field data)
 ├─ paper/                     IEEE IoT Journal manuscript (IEEEtran LaTeX), cover letter, photos
 ├─ docs/
 │  ├─ FIRMWARE.md             flash, Wi-Fi setup portal, build from source, message format
@@ -67,7 +69,7 @@ python simulate.py --speed 60 --lab-every 30 --fault heater:3@1800 --fault drum@
 Faults: `heater:<bowl>`, `leak:<bowl>`, `drum` at simulated second N; `--loss` drops packets.
 
 ## Paper study
-`python tools/sim_study.py` reproduces the *Simulation and Bench Study* section (≈10 min).
+`python tools/sim_study.py` reproduces the *Simulation and Bench Study* section (≈10 min); `python tools/e2e_emulation.py` reproduces its end-to-end emulation subsection (≈7 min).
 
 > **Research integrity:** simulator output is for testing software only. Factory results in the
 > journal paper must come from measurements on the real machine (rows with `source = device`).

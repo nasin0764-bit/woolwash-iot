@@ -207,20 +207,41 @@ async def broadcast(msg):
         clients.discard(c)
 
 
+def counter_increase(samples) -> float:
+    """Total increase of a cumulative counter that restarts from 0 when the node reboots.
+    samples: (boot_id, value) in time order. Within one boot the positive differences are summed (lost
+    packets do not matter, the counter is cumulative). After a reboot the counter starts again at 0, so the
+    first value of the new boot is itself the increase since that boot. A decrease without a new boot_id
+    (older firmware without boot_id) is treated as a restart as well."""
+    total, prev_boot, prev = 0.0, None, None
+    for boot, v in samples:
+        if v is None:
+            continue
+        v = float(v)
+        if prev is None:
+            prev_boot, prev = boot, v
+            continue
+        if boot != prev_boot or v < prev:
+            total += v                      # restarted from 0; increments before the restart are unknown
+        else:
+            total += v - prev
+        prev_boot, prev = boot, v
+    return total
+
+
 def kpis(machine: str, since: float) -> dict:
-    rows = q("SELECT ts,energy_kwh,water_l,feed_kg,moisture_pred FROM telemetry "
+    rows = q("SELECT ts,energy_kwh,water_l,feed_kg,moisture_pred,payload FROM telemetry "
              "WHERE machine=? AND ts>=? ORDER BY ts", (machine, since))
     if len(rows) < 2:
         return {}
     a, b = rows[0], rows[-1]
-    de = (b[1] or 0) - (a[1] or 0)
-    dw = (b[2] or 0) - (a[2] or 0)
-    df = (b[3] or 0) - (a[3] or 0)
+    boots = [json.loads(r[5]).get("boot_id") for r in rows]
+    de, dw, df = (counter_increase(zip(boots, (r[k] for r in rows))) for k in (1, 2, 3))
     mo = [r[4] for r in rows if r[4] is not None]
     return {
         "hours": round((b[0] - a[0]) / 3600, 3),
-        "energy_kwh": round(de, 3), "water_l": round(dw, 1), "feed_kg": round(df, 1),
-        "kwh_per_kg": round(de / df, 4) if df > 0 else None,
+        "energy_kwh": round(de, 4), "water_l": round(dw, 1), "feed_kg": round(df, 2),
+        "kwh_per_kg": round(de / df, 6) if df > 0 else None,
         "l_per_kg": round(dw / df, 3) if df > 0 else None,
         "moisture_mean": round(sum(mo) / len(mo), 2) if mo else None,
     }

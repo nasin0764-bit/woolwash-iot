@@ -63,3 +63,25 @@ def test_csv_export(client, payload):
     post(client, p)
     text = client.get("/api/export/WW-T5.csv").text
     assert text.startswith("ts,source,power_w") and len(text.splitlines()) == 2
+
+
+def test_counter_increase_survives_reboot_and_loss():
+    from main import counter_increase
+    # boot 1: 0 -> 10 with a lost packet (no 6), reboot: counter restarts at 0, boot 2: 1 -> 4
+    s = [(1, 0.0), (1, 2.0), (1, 4.0), (1, 8.0), (1, 10.0), (2, 1.0), (2, 2.5), (2, 4.0)]
+    assert counter_increase(s) == 14.0          # naive last-first would give 4.0
+    # older firmware without boot_id: a decrease is treated as a restart
+    assert counter_increase([(None, 5.0), (None, 9.0), (None, 2.0), (None, 3.0)]) == 4.0 + 2.0 + 1.0
+
+
+def test_kpis_across_reboot(client, payload):
+    import main
+    t0 = 1_790_000_000.0
+    for i, (boot, e, w, f) in enumerate([(1, 0.0, 0, 0.0), (1, 1.0, 100, 10.0), (1, 2.0, 200, 20.0),
+                                         (2, 0.5, 50, 5.0), (2, 1.5, 150, 15.0)]):
+        p = copy.deepcopy(payload)
+        p.update({"machine_id": "WW-T6", "ts": t0 + 2 * i, "seq": i, "boot_id": boot,
+                  "energy_kwh": e, "water_total_l": w, "feed_total_kg": f})
+        post(client, p)
+    k = main.kpis("WW-T6", t0 - 1)
+    assert k["energy_kwh"] == 3.5 and k["water_l"] == 350 and k["feed_kg"] == 35.0

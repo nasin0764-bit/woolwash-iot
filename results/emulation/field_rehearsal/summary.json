@@ -1,0 +1,27 @@
+{
+ "generated_utc": "2026-11-05T12:11:03+00:00",
+ "calibration": {
+  "Residual moisture soft sensor (%)": {
+   "n": 24,
+   "rmse": 1.0650880440915043,
+   "mae": 0.861541666666667,
+   "bias": -0.24637499999999987,
+   "r2": -0.9529380343764291
+  }
+ },
+ "packets": {
+  "sent": 14360,
+  "received": 14149,
+  "lost": 211,
+  "pdr_pct": 98.53064066852367,
+  "latency_ms": {
+   "n": 14149,
+   "median": 15.0,
+   "p95": 27.0,
+   "max": 63.0
+  },
+  "negative_latencies": 0
+ },
+ "batches": {},
+ "contains_simulated": true
+}
