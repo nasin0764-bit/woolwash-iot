@@ -60,7 +60,7 @@ that is not marked [HUMAN]**, finishes it, ticks it, and commits and pushes. The
 - [ ] [HUMAN] Bowl volume from the engineering drawing; patent certificate inventors.
 - [ ] [HUMAN] Journal submission (IEEE Author Portal, Traditional route).
 - [ ] [HUMAN] Install the autopilot scheduled task (blocked for the agent as persistence): `powershell -ExecutionPolicy Bypass -File autopilot\install_task.ps1`
-- [ ] [HUMAN] Enable CI: `gh auth refresh -h github.com -s workflow`, then copy ci/ci.yml to .github/workflows/ci.yml, commit and push
+- [x] [HUMAN] Enable CI: `gh auth refresh -h github.com -s workflow`, then copy ci/ci.yml to .github/workflows/ci.yml, commit and push
 
 ## Results log
 (one line per finished task: number | date | result | commit)
@@ -80,5 +80,6 @@ that is not marked [HUMAN]**, finishes it, ticks it, and commits and pushes. The
 11 | 2026-11-05 | Run after the user allowed exactly this script (permission rule in ~\.claude\settings.json). First run FOUND A BUG: QIO flash mode (Arduino default) crashed at flash init (assert init_flash, boot loop). Rebuilt with FlashMode=dio; second run: bootloader, DIO, banner, sensor scan PASS, stop at esp_phy_enable = expected (no Wi-Fi in QEMU). build.bat, ci.yml, FIRMWARE.md, release notes updated; release assets replaced. | see git log
 12 | 2026-11-05 | Full read-through. Fixed: (a) Sec. VI finding (ii) overclaimed 'lowest worst-case error for 1<=n<=5' - at n=3 the unstaged rule is better (0.98 vs 1.03 pp); now stated with exact numbers checked against s1_softsensor.json; (b) Eq. (2) objective lacked the lambda_c c^2 term; (c) 'unpenalised bias' / 'coincides' outdated after shrinkage -> 'weakly penalised' / 'nearly coincides'; (d) added the QEMU boot test and DIO finding to Sec. III. Still 6 pages. | see git log
 13 | 2026-11-05 | paper/approval/: REQUEST_EN/RU/UZ.md (drafts, not sent) and AUTHORSHIP_FORM.docx (CRediT 14 roles x 5 authors, 7 'proposed' marks from known facts only; per-author details, photo consent, COI, AI disclosure, approval). Paper: Acknowledgment with IEEE-required AI-use disclosure added as a TODO for the authors to confirm; still 6 pages. Generator: tools/make_authorship_form.py. | see git log
+CI | 2026-11-05 | User granted the workflow scope; .github/workflows/ci.yml active. First run 41993324689: tests success, firmware (esp32 3.3.12, DIO) success, 2 min 17 s. | 18e20a7
 
 ALL AUTONOMOUS TASKS DONE
