@@ -151,15 +151,17 @@ $\boldsymbol\phi=[(\omega-\omega_0)/s_\omega,\,(q-q_0)/s_q,\,(T-T_0)/s_T,\,(\tau
 \begin{equation}
 \hat W = W_0(d,D,h) + \mathbf w^\top\boldsymbol\phi + c,
 \end{equation}
-where $(\mathbf w,c)$ minimise $\sum_i (W_i - W_{0,i} - \mathbf w^\top\boldsymbol\phi_i - c)^2 + \lambda\|\mathbf w\|^2$
+where $(\mathbf w,c)$ minimise $\sum_i (W_i - W_{0,i} - \mathbf w^\top\boldsymbol\phi_i - c)^2 + \lambda\|\mathbf w\|^2
++ \lambda_c c^2$
 over laboratory samples $W_i$ taken after the squeezer and dried at 105\,$^\circ$C. The model is refitted on the server
 each time a sample is added, in three stages: with $n=0$ samples it is the DoE prior; for $1\le n<5$ only the plant
 offset is estimated, $c=\sum_i r_i/(n+\lambda_c)$ with $\mathbf w=\mathbf 0$; for $n\ge5$ the full correction is
 fitted ($\lambda=1$). The offset penalty $\lambda_c=\sigma_{\rm lab}^2/\tau_c^2$ corresponds to a Gaussian prior
 $c\sim\mathcal N(0,\tau_c^2)$, with the laboratory noise $\sigma_{\rm lab}=0.664$\,pp taken from the pooled replicate
 variance of Table~\ref{tab:doe} and an \emph{assumed} prior plant-offset uncertainty $\tau_c=1$\,pp.
-At a single, fixed geometry $W_0$ is a constant that the unpenalised bias $c$ absorbs, so the hybrid estimator then
-coincides with ordinary ridge regression; the prior adds information only at cold start and when the geometry changes
+At a single, fixed geometry $W_0$ is a constant that the only weakly penalised bias $c$ absorbs, so the hybrid
+estimator then nearly coincides with ordinary ridge regression; the prior adds information only at cold start, with few
+labels and when the geometry changes
 (another drum, gap or mesh, or another machine). Sec.~\ref{sec:sim} quantifies both cases in simulation.
 The DoE regression is evaluated in Sec.~\ref{sec:baseline} using its historical observations.
 A comparative assessment on temporally held-out field samples is reserved for Sec.~\ref{sec:iot}.
@@ -193,6 +195,8 @@ probes sit in side-stream cups of bowls~1--2; a Hall pickup on the first squeeze
 flowmeter measures fresh-water make-up; and a PZEM-004T interface meters electricity. An isolated 5-V supply and an
 IP65 enclosure are specified, mains work is done by an electrician, and the acquisition interval is 2\,s. Wi-Fi and
 server settings are entered once in a captive set-up portal of the node, so one firmware image serves every machine.
+The image boots in Espressif's QEMU emulator up to Wi-Fi start (QEMU has no radio); this test exposed a crash of the
+default quad-I/O flash mode, so all builds use dual-I/O (DIO).
 Each channel will be calibrated against a reference (thermometer, depth gauge, 20-L volumetric collection, formazin
 standards, tachometer, revenue-grade energy meter); errors and uncertainties will be estimated from the paired
 readings, not taken from datasheets. These statements describe the design, not a completed installation.
@@ -360,10 +364,12 @@ Random forest, no prior & -- & 1.26 & 0.91 & 0.64 & 1.13 & 2.15\\\bottomrule
 \end{figure}
 
 \emph{Findings.} (i) Purely data-driven models cannot predict before the first label, whereas the hybrid starts from the
-DoE prior. (ii) Shrinking the plant offset towards the prior gave the lowest \emph{worst-case} error for $1\le n\le5$
-over the two offsets: at $n=1$, 1.01/1.13\,pp (offset 0/1.5\,pp) versus 0.79/1.86\,pp for the unstaged rule and
-1.20/1.19\,pp without shrinkage; it costs accuracy when the prior is already correct. (iii) For $n=5$ it had the lowest
-error in all four scenarios (0.71--0.82\,pp versus 0.85--0.99\,pp for ridge). (iv) For $n\ge20$ at fixed geometry,
+DoE prior. (ii) Shrinking the plant offset towards the prior gave the lowest \emph{worst-case} error over the four
+scenarios at $n=1$ and $n=2$ (1.23 and 1.09\,pp, versus 2.09\,pp for the unstaged rule and 1.35 and 1.11\,pp without
+shrinkage); with the linear truth at $n=1$ it gave 1.01/1.13\,pp (offset 0/1.5\,pp) versus 0.79/1.86\,pp unstaged, so it
+costs accuracy when the prior is already correct. At $n=3$ the unstaged rule, which already fits the full correction,
+was slightly better (worst case 0.98 versus 1.03\,pp). (iii) For $n=5$ the proposed rule had the lowest error in all
+four scenarios (0.71--0.82\,pp versus 0.73--0.85\,pp unstaged and 0.85--0.99\,pp for ridge). (iv) For $n\ge20$ at fixed geometry,
 ordinary ridge regression was marginally better (e.g.\ 0.36 vs.\ 0.42\,pp, linear truth), as expected from the
 equivalence noted in Sec.~\ref{sec:hybrid}; the random forest was worst. (v) After a geometry change the hybrid
 kept 0.42--0.50\,pp, whereas the data-driven models rose to 1.0--2.2\,pp, because they cannot represent geometry they

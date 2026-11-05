@@ -51,6 +51,10 @@ that is not marked [HUMAN]**, finishes it, ticks it, and commits and pushes. The
 - [x] 10. **Supervisor copy of the corrections:** Word version of `Dissertation_Corrections.md` (tables kept).
 - [x] [HUMAN] 11. **Firmware boot test in QEMU** (blocked for the agent: running a downloaded binary). Run: `powershell -ExecutionPolicy Bypass -File firmware\qemu_boot_test.ps1`
 - [x] [HUMAN] 7. **Repository release** (blocked for the agent: creating a public release is the user's decision). Command: `gh release create v1.1.0 firmware/bin/woolwash_esp32_1.1.0.merged.bin firmware/bin/woolwash_esp32_1.1.0.bin firmware/bin/SHA256SUMS.txt --title "WoolWash-IoT 1.1.0 (firmware pre-release)" --notes-file firmware/RELEASE_NOTES_1.1.0.md --prerelease`
+- [x] 12. **Manuscript proofreading pass:** numbers consistent between abstract, text, tables and results files;
+      cross-references; claims within the evidence; typos. Fix, rebuild, keep <= 6 pages.
+- [ ] 13. **Co-author approval package:** request message (EN/RU/UZ) and an authorship contribution form (CRediT roles)
+      in `paper/approval/`. Draft only; never send.
 - [ ] [HUMAN] Factory measurements (docs/HARDWARE.md §5): needed for Section VII.
 - [ ] [HUMAN] Written approval of the full manuscript by all five authors; M. Anorkulov confirms his contribution.
 - [ ] [HUMAN] Bowl volume from the engineering drawing; patent certificate inventors.
@@ -74,5 +78,4 @@ that is not marked [HUMAN]**, finishes it, ticks it, and commits and pushes. The
 11 | 2026-11-05 | Running Espressif QEMU was denied by the safety classifier (code from external). Wrote firmware/qemu_boot_test.ps1 (official release, size check, 25-s boot, automatic PASS/FAIL checks, honest note that Wi-Fi is not emulated); task moved to [HUMAN]. Downloaded copy deleted. | see git log
 7 | 2026-11-05 | On the user's explicit request: pre-release v1.1.0 published with merged.bin, app .bin and SHA256SUMS (https://github.com/nasin0764-bit/woolwash-iot/releases/tag/v1.1.0). QEMU test and scheduled-task install were blocked again by the safety classifier; they stay with the user. | release v1.1.0
 11 | 2026-11-05 | Run after the user allowed exactly this script (permission rule in ~\.claude\settings.json). First run FOUND A BUG: QIO flash mode (Arduino default) crashed at flash init (assert init_flash, boot loop). Rebuilt with FlashMode=dio; second run: bootloader, DIO, banner, sensor scan PASS, stop at esp_phy_enable = expected (no Wi-Fi in QEMU). build.bat, ci.yml, FIRMWARE.md, release notes updated; release assets replaced. | see git log
-
-ALL AUTONOMOUS TASKS DONE
+12 | 2026-11-05 | Full read-through. Fixed: (a) Sec. VI finding (ii) overclaimed 'lowest worst-case error for 1<=n<=5' - at n=3 the unstaged rule is better (0.98 vs 1.03 pp); now stated with exact numbers checked against s1_softsensor.json; (b) Eq. (2) objective lacked the lambda_c c^2 term; (c) 'unpenalised bias' / 'coincides' outdated after shrinkage -> 'weakly penalised' / 'nearly coincides'; (d) added the QEMU boot test and DIO finding to Sec. III. Still 6 pages. | see git log
